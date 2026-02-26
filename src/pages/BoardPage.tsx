@@ -15,6 +15,7 @@ import { BoardColumn, FacilitatorToolbar, VoteStatus, ViewToggle, SwimlaneView, 
 import type { BoardView } from '@/types';
 import { useBoardStore } from '@/stores/boardStore';
 import { useTimer } from '@/hooks/useTimer';
+import { usePresence } from '@/hooks/usePresence';
 import { TimerDisplay } from '@/components/Timer';
 import { ActionItemsPanel } from '@/components/ActionItems';
 import { exportMarkdown, exportCsv } from '@/utils/export';
@@ -67,6 +68,8 @@ export function BoardPage() {
   const { timer, start: timerStart, pause: timerPause, resume: timerResume, reset: timerReset } = useTimer({
     boardId: boardId || '',
   });
+
+  usePresence(boardId, currentParticipantId);
 
   useEffect(() => {
     if (boardId) {

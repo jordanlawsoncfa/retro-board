@@ -339,3 +339,4 @@ ALTER PUBLICATION supabase_realtime ADD TABLE columns;
 ALTER PUBLICATION supabase_realtime ADD TABLE cards;
 ALTER PUBLICATION supabase_realtime ADD TABLE votes;
 ALTER PUBLICATION supabase_realtime ADD TABLE participants;
+ALTER PUBLICATION supabase_realtime ADD TABLE action_items;

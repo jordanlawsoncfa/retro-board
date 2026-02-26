@@ -656,7 +656,17 @@ export const useBoardStore = create<BoardState>((set, get) => ({
           }));
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`[Realtime] Board ${boardId}: postgres_changes subscription active`);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`[Realtime] Board ${boardId}: channel error`, err);
+        } else if (status === 'TIMED_OUT') {
+          console.error(`[Realtime] Board ${boardId}: subscription timed out`);
+        } else {
+          console.log(`[Realtime] Board ${boardId}: status=${status}`);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);

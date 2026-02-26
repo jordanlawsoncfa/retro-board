@@ -12,6 +12,8 @@ import { AppShell } from '@/components/Layout';
 import { Button, Input, Modal } from '@/components/common';
 import { BoardColumn, FacilitatorToolbar, VoteStatus } from '@/components/Board';
 import { useBoardStore } from '@/stores/boardStore';
+import { useTimer } from '@/hooks/useTimer';
+import { TimerDisplay } from '@/components/Timer';
 
 export function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -42,6 +44,10 @@ export function BoardPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+
+  const { timer, start: timerStart, pause: timerPause, resume: timerResume, reset: timerReset } = useTimer({
+    boardId: boardId || '',
+  });
 
   useEffect(() => {
     if (boardId) {
@@ -157,7 +163,12 @@ export function BoardPage() {
             settings={board.settings}
             participantCount={participants.length}
             boardId={board.id}
+            timer={timer}
             onUpdateSettings={updateSettings}
+            onTimerStart={timerStart}
+            onTimerPause={timerPause}
+            onTimerResume={timerResume}
+            onTimerReset={timerReset}
           />
         ) : undefined
       }
@@ -172,12 +183,17 @@ export function BoardPage() {
                 <p className="mt-1 text-sm text-[var(--color-gray-5)]">{board.description}</p>
               )}
             </div>
-            {isJoined && board.settings.voting_enabled && (
-              <VoteStatus
-                votesUsed={votes.filter((v) => v.voter_id === currentParticipantId).length}
-                maxVotes={board.settings.max_votes_per_participant}
-              />
-            )}
+            <div className="flex items-center gap-3">
+              {isJoined && timer.status !== 'idle' && (
+                <TimerDisplay timer={timer} />
+              )}
+              {isJoined && board.settings.voting_enabled && (
+                <VoteStatus
+                  votesUsed={votes.filter((v) => v.voter_id === currentParticipantId).length}
+                  maxVotes={board.settings.max_votes_per_participant}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

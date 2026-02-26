@@ -1,19 +1,30 @@
-import { Eye, EyeOff, Lock, Unlock, Vote, Timer, Users, Share2 } from 'lucide-react';
+import { Eye, EyeOff, Lock, Unlock, Vote, Users, Share2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import type { BoardSettings } from '@/types';
+import { TimerControls } from '@/components/Timer';
+import type { BoardSettings, TimerState } from '@/types';
 
 interface FacilitatorToolbarProps {
   settings: BoardSettings;
   participantCount: number;
   boardId: string;
+  timer: TimerState;
   onUpdateSettings: (settings: Partial<BoardSettings>) => void;
+  onTimerStart: (duration: number) => void;
+  onTimerPause: () => void;
+  onTimerResume: () => void;
+  onTimerReset: () => void;
 }
 
 export function FacilitatorToolbar({
   settings,
   participantCount,
   boardId,
+  timer,
   onUpdateSettings,
+  onTimerStart,
+  onTimerPause,
+  onTimerResume,
+  onTimerReset,
 }: FacilitatorToolbarProps) {
   const isRevealed = settings.card_visibility === 'visible';
   const isLocked = settings.board_locked;
@@ -64,13 +75,13 @@ export function FacilitatorToolbar({
         />
       )}
 
-      {/* Timer placeholder */}
-      <ToolbarButton
-        icon={Timer}
-        label="Timer"
-        onClick={() => {
-          // Timer UI will be built in Phase 4
-        }}
+      {/* Timer controls */}
+      <TimerControls
+        timer={timer}
+        onStart={onTimerStart}
+        onPause={onTimerPause}
+        onResume={onTimerResume}
+        onReset={onTimerReset}
       />
 
       {/* Divider */}

@@ -521,6 +521,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         (payload) => {
           set((state) => ({
             cards: state.cards.filter((c) => c.id !== payload.old.id),
+            votes: state.votes.filter((v) => v.card_id !== payload.old.id),
           }));
         }
       )
@@ -547,9 +548,17 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'columns', filter: `board_id=eq.${boardId}` },
         (payload) => {
-          set((state) => ({
-            columns: state.columns.filter((c) => c.id !== payload.old.id),
-          }));
+          set((state) => {
+            const deletedColumnId = payload.old.id;
+            const deletedCardIds = new Set(
+              state.cards.filter((c) => c.column_id === deletedColumnId).map((c) => c.id)
+            );
+            return {
+              columns: state.columns.filter((c) => c.id !== deletedColumnId),
+              cards: state.cards.filter((c) => c.column_id !== deletedColumnId),
+              votes: state.votes.filter((v) => !deletedCardIds.has(v.card_id)),
+            };
+          });
         }
       )
       .on(

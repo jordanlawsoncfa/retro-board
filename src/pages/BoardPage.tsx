@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   DndContext,
   closestCorners,
@@ -11,7 +11,8 @@ import {
 import { Link2, Check } from 'lucide-react';
 import { AppShell } from '@/components/Layout';
 import { Button, Input, Modal } from '@/components/common';
-import { BoardColumn, FacilitatorToolbar, VoteStatus } from '@/components/Board';
+import { BoardColumn, FacilitatorToolbar, VoteStatus, ViewToggle, SwimlaneView, ListView, TimelineView } from '@/components/Board';
+import type { BoardView } from '@/types';
 import { useBoardStore } from '@/stores/boardStore';
 import { useTimer } from '@/hooks/useTimer';
 import { TimerDisplay } from '@/components/Timer';
@@ -55,6 +56,13 @@ export function BoardPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentView = (searchParams.get('view') as BoardView) || 'grid';
+
+  const handleChangeView = useCallback((view: BoardView) => {
+    setSearchParams(view === 'grid' ? {} : { view });
+  }, [setSearchParams]);
 
   const { timer, start: timerStart, pause: timerPause, resume: timerResume, reset: timerReset } = useTimer({
     boardId: boardId || '',
@@ -262,60 +270,118 @@ export function BoardPage() {
         </div>
       </div>
 
-      {/* Board columns */}
-      <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
-        {isJoined ? (
-          columns.length > 0 ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCorners}
-              onDragEnd={handleDragEnd}
-            >
-              <div
-                className="grid gap-4"
-                style={{
-                  gridTemplateColumns: `repeat(${Math.min(columns.length, 4)}, minmax(280px, 1fr))`,
-                }}
-              >
-                {[...columns]
-                  .sort((a, b) => a.position - b.position)
-                  .map((col) => (
-                    <BoardColumn
-                      key={col.id}
-                      column={col}
-                      cards={cards.filter((c) => c.column_id === col.id)}
-                      votes={votes}
-                      currentParticipantId={currentParticipantId}
-                      isObscured={isObscured}
-                      votingEnabled={board.settings.voting_enabled}
-                      secretVoting={board.settings.secret_voting}
-                      cardCreationDisabled={
-                        board.settings.card_creation_disabled || board.settings.board_locked
-                      }
-                      maxVotesPerParticipant={board.settings.max_votes_per_participant}
-                      onAddCard={handleAddCard}
-                      onUpdateCard={updateCard}
-                      onDeleteCard={deleteCard}
-                      onToggleVote={toggleVote}
-                      isCompleted={isCompleted}
-                    />
-                  ))}
+      {/* View toggle */}
+      {isJoined && columns.length > 0 && (
+        <div className="mx-auto max-w-[1400px] px-4 pt-4 sm:px-6">
+          <ViewToggle currentView={currentView} onChangeView={handleChangeView} />
+        </div>
+      )}
+
+      {/* Board content */}
+      {isJoined ? (
+        columns.length > 0 ? (
+          <>
+            {currentView === 'grid' && (
+              <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCorners}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div
+                    className="grid gap-4"
+                    style={{
+                      gridTemplateColumns: `repeat(${Math.min(columns.length, 4)}, minmax(280px, 1fr))`,
+                    }}
+                  >
+                    {[...columns]
+                      .sort((a, b) => a.position - b.position)
+                      .map((col) => (
+                        <BoardColumn
+                          key={col.id}
+                          column={col}
+                          cards={cards.filter((c) => c.column_id === col.id)}
+                          votes={votes}
+                          currentParticipantId={currentParticipantId}
+                          isObscured={isObscured}
+                          votingEnabled={board.settings.voting_enabled}
+                          secretVoting={board.settings.secret_voting}
+                          cardCreationDisabled={
+                            board.settings.card_creation_disabled || board.settings.board_locked
+                          }
+                          maxVotesPerParticipant={board.settings.max_votes_per_participant}
+                          onAddCard={handleAddCard}
+                          onUpdateCard={updateCard}
+                          onDeleteCard={deleteCard}
+                          onToggleVote={toggleVote}
+                          isCompleted={isCompleted}
+                        />
+                      ))}
+                  </div>
+                </DndContext>
               </div>
-            </DndContext>
-          ) : (
+            )}
+
+            {currentView === 'swimlane' && (
+              <SwimlaneView
+                columns={columns}
+                cards={cards}
+                votes={votes}
+                participants={participants}
+                currentParticipantId={currentParticipantId}
+                isObscured={isObscured}
+                isCompleted={isCompleted}
+                votingEnabled={board.settings.voting_enabled}
+                secretVoting={board.settings.secret_voting}
+                maxVotesPerParticipant={board.settings.max_votes_per_participant}
+                boardCreatedAt={board.created_at}
+                onUpdateCard={updateCard}
+                onDeleteCard={deleteCard}
+                onToggleVote={toggleVote}
+              />
+            )}
+
+            {currentView === 'list' && (
+              <ListView
+                columns={columns}
+                cards={cards}
+                votes={votes}
+                currentParticipantId={currentParticipantId}
+                isObscured={isObscured}
+                votingEnabled={board.settings.voting_enabled}
+                onToggleVote={toggleVote}
+              />
+            )}
+
+            {currentView === 'timeline' && (
+              <TimelineView
+                columns={columns}
+                cards={cards}
+                votes={votes}
+                currentParticipantId={currentParticipantId}
+                isObscured={isObscured}
+                votingEnabled={board.settings.voting_enabled}
+                onToggleVote={toggleVote}
+              />
+            )}
+          </>
+        ) : (
+          <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
             <div className="rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-white/50 p-12 text-center">
               <p className="text-lg font-medium text-[var(--color-gray-5)]">No columns yet</p>
               <p className="mt-2 text-sm text-[var(--color-gray-4)]">
                 The board admin can add columns to get started.
               </p>
             </div>
-          )
-        ) : (
+          </div>
+        )
+      ) : (
+        <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
           <div className="py-12 text-center">
             <p className="text-[var(--color-gray-5)]">Join the board to participate</p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Join Modal */}
       <Modal

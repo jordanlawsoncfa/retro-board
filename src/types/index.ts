@@ -17,6 +17,9 @@ export type BoardTemplate =
   | 'went-well-didnt-action'
   | 'custom';
 
+export type BoardView = 'grid' | 'swimlane' | 'list' | 'timeline';
+export type SwimlaneGroupBy = 'author' | 'votes' | 'time';
+
 export interface BoardSettings {
   card_visibility: 'hidden' | 'visible';
   voting_enabled: boolean;

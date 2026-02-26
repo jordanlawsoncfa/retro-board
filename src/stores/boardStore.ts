@@ -222,26 +222,37 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
     const participantId = crypto.randomUUID();
 
+    // First joiner (no existing admins) becomes the facilitator
+    const { participants: currentParticipants } = get();
+    const hasAdmin = currentParticipants.some((p) => p.is_admin);
+    const isAdmin = !hasAdmin;
+
     const { error } = await supabase.from('participants').insert({
       id: participantId,
       board_id: boardId,
       display_name: displayName,
-      is_admin: false,
+      is_admin: isAdmin,
     });
 
     if (error) throw error;
+
+    // If this is the first joiner, also set them as board creator
+    if (isAdmin) {
+      await supabase.from('boards').update({ created_by: participantId }).eq('id', boardId);
+    }
 
     sessionStorage.setItem(`retro-pid-${boardId}`, participantId);
 
     set((state) => ({
       currentParticipantId: participantId,
+      board: isAdmin && state.board ? { ...state.board, created_by: participantId } : state.board,
       participants: [
         ...state.participants,
         {
           id: participantId,
           board_id: boardId,
           display_name: displayName,
-          is_admin: false,
+          is_admin: isAdmin,
           joined_at: new Date().toISOString(),
           last_seen: new Date().toISOString(),
         },

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pencil, Trash2, ThumbsUp, Check, X } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { getCardTextColor, CARD_TEXT_CLASSES } from '../../utils/cardColors';
 import { CardColorPicker } from './CardColorPicker';
 
 interface RetroCardProps {
@@ -39,6 +40,7 @@ export function RetroCard({
   onToggleVote,
   isCompleted,
 }: RetroCardProps) {
+  const contrast = CARD_TEXT_CLASSES[getCardTextColor(color)];
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(text);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
@@ -111,10 +113,10 @@ export function RetroCard({
         </div>
       ) : (
         <>
-          <p className="whitespace-pre-wrap text-sm text-[var(--color-gray-8)]">{text}</p>
+          <p className={cn('whitespace-pre-wrap text-sm', contrast.text)}>{text}</p>
 
           <div className="mt-2 flex items-center justify-between">
-            <span className="text-xs text-[var(--color-gray-4)]">{authorName}</span>
+            <span className={cn('text-xs', contrast.subtext)}>{authorName}</span>
 
             <div className="flex items-center gap-1">
               {/* Vote button */}
@@ -125,10 +127,10 @@ export function RetroCard({
                   className={cn(
                     'flex items-center gap-1 rounded-[var(--radius-full)] px-2 py-0.5 text-xs transition-colors',
                     hasVoted
-                      ? 'bg-[var(--color-navy)]/10 text-[var(--color-navy)] font-medium'
+                      ? `bg-[var(--color-navy)]/10 ${contrast.text} font-medium`
                       : voteLimitReached
-                        ? 'cursor-not-allowed text-[var(--color-gray-3)]'
-                        : 'text-[var(--color-gray-4)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-6)]'
+                        ? `cursor-not-allowed ${contrast.icon}`
+                        : `${contrast.subtext} hover:bg-[var(--color-gray-1)] ${contrast.iconHover}`
                   )}
                   aria-label={hasVoted ? 'Remove vote' : voteLimitReached ? 'Vote limit reached' : 'Vote for this card'}
                   title={voteLimitReached && !hasVoted ? 'No votes remaining' : undefined}
@@ -148,20 +150,22 @@ export function RetroCard({
                     currentColor={color}
                     onSelectColor={(newColor) => onUpdate(id, { color: newColor })}
                     onOpenChange={setColorPickerOpen}
+                    iconClassName={contrast.icon}
+                    iconHoverClassName={contrast.iconHover}
                   />
                   <button
                     onClick={() => {
                       setEditText(text);
                       setIsEditing(true);
                     }}
-                    className="rounded-[var(--radius-sm)] p-1 text-[var(--color-gray-4)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-6)]"
+                    className={cn('rounded-[var(--radius-sm)] p-1', contrast.icon, 'hover:bg-[var(--color-gray-1)]', contrast.iconHover)}
                     aria-label="Edit card"
                   >
                     <Pencil size={12} />
                   </button>
                   <button
                     onClick={() => onDelete(id)}
-                    className="rounded-[var(--radius-sm)] p-1 text-[var(--color-gray-4)] hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)]"
+                    className={cn('rounded-[var(--radius-sm)] p-1', contrast.icon, 'hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)]')}
                     aria-label="Delete card"
                   >
                     <Trash2 size={12} />

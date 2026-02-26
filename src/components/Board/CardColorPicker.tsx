@@ -7,9 +7,11 @@ interface CardColorPickerProps {
   currentColor: string | null;
   onSelectColor: (color: string | null) => void;
   onOpenChange?: (open: boolean) => void;
+  iconClassName?: string;
+  iconHoverClassName?: string;
 }
 
-export function CardColorPicker({ currentColor, onSelectColor, onOpenChange }: CardColorPickerProps) {
+export function CardColorPicker({ currentColor, onSelectColor, onOpenChange, iconClassName, iconHoverClassName }: CardColorPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +35,7 @@ export function CardColorPicker({ currentColor, onSelectColor, onOpenChange }: C
     <div className="relative" ref={pickerRef}>
       <button
         onClick={() => setOpen(!isOpen)}
-        className="rounded-[var(--radius-sm)] p-1 text-[var(--color-gray-4)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-6)]"
+        className={cn('rounded-[var(--radius-sm)] p-1', iconClassName || 'text-[var(--color-gray-4)]', 'hover:bg-[var(--color-gray-1)]', iconHoverClassName || 'hover:text-[var(--color-gray-6)]')}
         aria-label="Change card color"
       >
         <Palette size={12} />

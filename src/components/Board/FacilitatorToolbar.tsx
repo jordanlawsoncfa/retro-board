@@ -54,6 +54,16 @@ export function FacilitatorToolbar({
         onClick={() => onUpdateSettings({ voting_enabled: !votingOn })}
       />
 
+      {/* Secret voting toggle — only show when voting is enabled */}
+      {votingOn && (
+        <ToolbarButton
+          icon={settings.secret_voting ? EyeOff : Eye}
+          label={settings.secret_voting ? 'Secret voting' : 'Open voting'}
+          active={settings.secret_voting}
+          onClick={() => onUpdateSettings({ secret_voting: !settings.secret_voting })}
+        />
+      )}
+
       {/* Timer placeholder */}
       <ToolbarButton
         icon={Timer}

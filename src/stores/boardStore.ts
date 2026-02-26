@@ -5,6 +5,16 @@ import { DEFAULT_BOARD_SETTINGS } from '@/utils/constants';
 import { BOARD_TEMPLATES } from '@/utils/templates';
 import type { Board, Column, Card, Vote, ActionItem, Participant, BoardTemplate, BoardSettings } from '@/types';
 
+// Module-level broadcast channel for cross-client sync
+let syncChannel: ReturnType<typeof supabase.channel> | null = null;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function broadcast(event: string, payload: any) {
+  if (syncChannel) {
+    syncChannel.send({ type: 'broadcast', event, payload });
+  }
+}
+
 interface BoardState {
   board: Board | null;
   columns: Column[];
@@ -181,7 +191,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
     if (error) throw error;
 
-    set({ board: { ...board, settings: newSettings } });
+    const updatedBoard = { ...board, settings: newSettings };
+    set({ board: updatedBoard });
+    broadcast('board:update', updatedBoard);
   },
 
   completeBoard: async () => {
@@ -199,13 +211,13 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
     if (error) throw error;
 
-    set({
-      board: {
-        ...board,
-        archived_at: archivedAt,
-        settings: { ...board.settings, card_visibility: 'visible', board_locked: true },
-      },
-    });
+    const completedBoard = {
+      ...board,
+      archived_at: archivedAt,
+      settings: { ...board.settings, card_visibility: 'visible' as const, board_locked: true },
+    };
+    set({ board: completedBoard });
+    broadcast('board:update', completedBoard);
   },
 
   joinBoard: async (boardId, displayName) => {
@@ -243,21 +255,21 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
     sessionStorage.setItem(`retro-pid-${boardId}`, participantId);
 
+    const newParticipant: Participant = {
+      id: participantId,
+      board_id: boardId,
+      display_name: displayName,
+      is_admin: isAdmin,
+      joined_at: new Date().toISOString(),
+      last_seen: new Date().toISOString(),
+    };
+
     set((state) => ({
       currentParticipantId: participantId,
       board: isAdmin && state.board ? { ...state.board, created_by: participantId } : state.board,
-      participants: [
-        ...state.participants,
-        {
-          id: participantId,
-          board_id: boardId,
-          display_name: displayName,
-          is_admin: isAdmin,
-          joined_at: new Date().toISOString(),
-          last_seen: new Date().toISOString(),
-        },
-      ],
+      participants: [...state.participants, newParticipant],
     }));
+    broadcast('participant:insert', newParticipant);
   },
 
   updateParticipant: async (participantId, updates) => {
@@ -271,6 +283,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         p.id === participantId ? { ...p, ...updates } : p
       ),
     }));
+    const updated = get().participants.find((p) => p.id === participantId);
+    if (updated) broadcast('participant:update', updated);
   },
 
   removeParticipant: async (participantId) => {
@@ -282,6 +296,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     set((state) => ({
       participants: state.participants.filter((p) => p.id !== participantId),
     }));
+    broadcast('participant:delete', { id: participantId });
   },
 
   // --- Column CRUD ---
@@ -350,23 +365,23 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     const { error } = await supabase.from('cards').insert(newCard);
     if (error) throw error;
 
-    set((state) => ({
-      cards: [
-        ...state.cards,
-        { ...newCard, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-      ],
-    }));
+    const fullCard = { ...newCard, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    set((state) => ({ cards: [...state.cards, fullCard] }));
+    broadcast('card:insert', fullCard);
   },
 
   updateCard: async (cardId, updates) => {
     const { error } = await supabase.from('cards').update(updates).eq('id', cardId);
     if (error) throw error;
 
+    const updatedAt = new Date().toISOString();
     set((state) => ({
       cards: state.cards.map((c) =>
-        c.id === cardId ? { ...c, ...updates, updated_at: new Date().toISOString() } : c
+        c.id === cardId ? { ...c, ...updates, updated_at: updatedAt } : c
       ),
     }));
+    const updatedCard = get().cards.find((c) => c.id === cardId);
+    if (updatedCard) broadcast('card:update', updatedCard);
   },
 
   deleteCard: async (cardId) => {
@@ -377,6 +392,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       cards: state.cards.filter((c) => c.id !== cardId),
       votes: state.votes.filter((v) => v.card_id !== cardId),
     }));
+    broadcast('card:delete', { id: cardId });
   },
 
   moveCard: async (cardId, targetColumnId, newPosition) => {
@@ -418,6 +434,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       }));
       throw error;
     }
+
+    const movedCard = get().cards.find((c) => c.id === cardId);
+    if (movedCard) broadcast('card:update', movedCard);
   },
 
   // --- Voting ---
@@ -434,6 +453,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       const { error } = await supabase.from('votes').delete().eq('id', existingVote.id);
       if (error) throw error;
       set((state) => ({ votes: state.votes.filter((v) => v.id !== existingVote.id) }));
+      broadcast('vote:delete', { id: existingVote.id, card_id: cardId });
     } else {
       // Check global vote limit
       const myVoteCount = votes.filter((v) => v.voter_id === currentParticipantId).length;
@@ -450,9 +470,11 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       const { error } = await supabase.from('votes').insert(newVote);
       if (error) throw error;
 
+      const fullVote = { ...newVote, created_at: new Date().toISOString() };
       set((state) => ({
-        votes: [...state.votes, { ...newVote, created_at: new Date().toISOString() }],
+        votes: [...state.votes, fullVote],
       }));
+      broadcast('vote:insert', fullVote);
     }
   },
 
@@ -473,9 +495,11 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     const { data, error } = await supabase.from('action_items').insert(newItem).select().single();
     if (error) throw error;
 
+    const item = data as ActionItem;
     set((state) => ({
-      actionItems: [...state.actionItems, data as ActionItem],
+      actionItems: [...state.actionItems, item],
     }));
+    broadcast('action_item:insert', item);
   },
 
   updateActionItem: async (itemId, updates) => {
@@ -487,6 +511,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         item.id === itemId ? { ...item, ...updates } : item
       ),
     }));
+    const updated = get().actionItems.find((a) => a.id === itemId);
+    if (updated) broadcast('action_item:update', updated);
   },
 
   deleteActionItem: async (itemId) => {
@@ -496,6 +522,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     set((state) => ({
       actionItems: state.actionItems.filter((item) => item.id !== itemId),
     }));
+    broadcast('action_item:delete', { id: itemId });
   },
 
   // --- Presence ---
@@ -668,8 +695,87 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         }
       });
 
+    // --- Broadcast sync channel (fallback for postgres_changes) ---
+    const currentPid = get().currentParticipantId;
+    syncChannel = supabase.channel(`sync:${boardId}`);
+    syncChannel
+      .on('broadcast', { event: 'card:insert' }, ({ payload }) => {
+        set((state) => {
+          if (state.cards.some((c) => c.id === payload.id)) return state;
+          return { cards: [...state.cards, payload as Card] };
+        });
+      })
+      .on('broadcast', { event: 'card:update' }, ({ payload }) => {
+        set((state) => ({
+          cards: state.cards.map((c) => (c.id === payload.id ? (payload as Card) : c)),
+        }));
+      })
+      .on('broadcast', { event: 'card:delete' }, ({ payload }) => {
+        set((state) => ({
+          cards: state.cards.filter((c) => c.id !== payload.id),
+          votes: state.votes.filter((v) => v.card_id !== payload.id),
+        }));
+      })
+      .on('broadcast', { event: 'vote:insert' }, ({ payload }) => {
+        set((state) => {
+          if (state.votes.some((v) => v.id === payload.id)) return state;
+          return { votes: [...state.votes, payload as Vote] };
+        });
+      })
+      .on('broadcast', { event: 'vote:delete' }, ({ payload }) => {
+        set((state) => ({
+          votes: state.votes.filter((v) => v.id !== payload.id),
+        }));
+      })
+      .on('broadcast', { event: 'participant:insert' }, ({ payload }) => {
+        set((state) => {
+          if (state.participants.some((p) => p.id === payload.id)) return state;
+          return { participants: [...state.participants, payload as Participant] };
+        });
+      })
+      .on('broadcast', { event: 'participant:update' }, ({ payload }) => {
+        set((state) => ({
+          participants: state.participants.map((p) =>
+            p.id === payload.id ? (payload as Participant) : p
+          ),
+        }));
+      })
+      .on('broadcast', { event: 'participant:delete' }, ({ payload }) => {
+        set((state) => ({
+          participants: state.participants.filter((p) => p.id !== payload.id),
+        }));
+      })
+      .on('broadcast', { event: 'board:update' }, ({ payload }) => {
+        set({ board: payload as Board });
+      })
+      .on('broadcast', { event: 'action_item:insert' }, ({ payload }) => {
+        set((state) => {
+          if (state.actionItems.some((a) => a.id === payload.id)) return state;
+          return { actionItems: [...state.actionItems, payload as ActionItem] };
+        });
+      })
+      .on('broadcast', { event: 'action_item:update' }, ({ payload }) => {
+        set((state) => ({
+          actionItems: state.actionItems.map((a) => (a.id === payload.id ? (payload as ActionItem) : a)),
+        }));
+      })
+      .on('broadcast', { event: 'action_item:delete' }, ({ payload }) => {
+        set((state) => ({
+          actionItems: state.actionItems.filter((a) => a.id !== payload.id),
+        }));
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`[Realtime] Board ${boardId}: broadcast sync channel active (pid: ${currentPid})`);
+        }
+      });
+
     return () => {
       supabase.removeChannel(channel);
+      if (syncChannel) {
+        supabase.removeChannel(syncChannel);
+        syncChannel = null;
+      }
     };
   },
 

@@ -21,6 +21,7 @@ interface BoardColumnProps {
   onUpdateCard: (cardId: string, text: string) => void;
   onDeleteCard: (cardId: string) => void;
   onToggleVote: (cardId: string) => void;
+  isCompleted?: boolean;
 }
 
 export function BoardColumn({
@@ -37,6 +38,7 @@ export function BoardColumn({
   onUpdateCard,
   onDeleteCard,
   onToggleVote,
+  isCompleted,
 }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
@@ -117,6 +119,7 @@ export function BoardColumn({
                   onUpdate={onUpdateCard}
                   onDelete={onDeleteCard}
                   onToggleVote={onToggleVote}
+                  isCompleted={isCompleted}
                 />
               </SortableCard>
             );

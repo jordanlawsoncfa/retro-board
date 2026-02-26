@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Lock, Unlock, Vote, Users, ClipboardList } from 'lucide-react';
+import { Eye, EyeOff, Lock, Unlock, Vote, Users, ClipboardList, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { TimerControls } from '@/components/Timer';
 import type { BoardSettings, TimerState } from '@/types';
@@ -14,6 +14,8 @@ interface FacilitatorToolbarProps {
   onTimerReset: () => void;
   actionItemCount: number;
   onToggleActionItems: () => void;
+  isCompleted: boolean;
+  onCompleteRetro: () => void;
 }
 
 export function FacilitatorToolbar({
@@ -27,6 +29,8 @@ export function FacilitatorToolbar({
   onTimerReset,
   actionItemCount,
   onToggleActionItems,
+  isCompleted,
+  onCompleteRetro,
 }: FacilitatorToolbarProps) {
   const isRevealed = settings.card_visibility === 'visible';
   const isLocked = settings.board_locked;
@@ -34,59 +38,70 @@ export function FacilitatorToolbar({
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto">
-      {/* Reveal / Hide cards */}
-      <ToolbarButton
-        icon={isRevealed ? Eye : EyeOff}
-        label={isRevealed ? 'Cards visible' : 'Cards hidden'}
-        active={isRevealed}
-        onClick={() =>
-          onUpdateSettings({
-            card_visibility: isRevealed ? 'hidden' : 'visible',
-          })
-        }
-      />
+      {!isCompleted && (
+        <>
+          {/* Reveal / Hide cards */}
+          <ToolbarButton
+            icon={isRevealed ? Eye : EyeOff}
+            label={isRevealed ? 'Cards visible' : 'Cards hidden'}
+            active={isRevealed}
+            onClick={() =>
+              onUpdateSettings({
+                card_visibility: isRevealed ? 'hidden' : 'visible',
+              })
+            }
+          />
 
-      {/* Lock / Unlock board */}
-      <ToolbarButton
-        icon={isLocked ? Lock : Unlock}
-        label={isLocked ? 'Board locked' : 'Board open'}
-        active={isLocked}
-        onClick={() => onUpdateSettings({ board_locked: !isLocked })}
-      />
+          {/* Lock / Unlock board */}
+          <ToolbarButton
+            icon={isLocked ? Lock : Unlock}
+            label={isLocked ? 'Board locked' : 'Board open'}
+            active={isLocked}
+            onClick={() => onUpdateSettings({ board_locked: !isLocked })}
+          />
 
-      {/* Toggle voting */}
-      <ToolbarButton
-        icon={Vote}
-        label={votingOn ? 'Voting on' : 'Voting off'}
-        active={votingOn}
-        onClick={() => onUpdateSettings({ voting_enabled: !votingOn })}
-      />
+          {/* Toggle voting */}
+          <ToolbarButton
+            icon={Vote}
+            label={votingOn ? 'Voting on' : 'Voting off'}
+            active={votingOn}
+            onClick={() => onUpdateSettings({ voting_enabled: !votingOn })}
+          />
 
-      {/* Secret voting toggle — only show when voting is enabled */}
-      {votingOn && (
-        <ToolbarButton
-          icon={settings.secret_voting ? EyeOff : Eye}
-          label={settings.secret_voting ? 'Secret voting' : 'Open voting'}
-          active={settings.secret_voting}
-          onClick={() => onUpdateSettings({ secret_voting: !settings.secret_voting })}
-        />
+          {/* Secret voting toggle — only show when voting is enabled */}
+          {votingOn && (
+            <ToolbarButton
+              icon={settings.secret_voting ? EyeOff : Eye}
+              label={settings.secret_voting ? 'Secret voting' : 'Open voting'}
+              active={settings.secret_voting}
+              onClick={() => onUpdateSettings({ secret_voting: !settings.secret_voting })}
+            />
+          )}
+
+          {/* Timer controls */}
+          <TimerControls
+            timer={timer}
+            onStart={onTimerStart}
+            onPause={onTimerPause}
+            onResume={onTimerResume}
+            onReset={onTimerReset}
+          />
+
+          {/* Action Items */}
+          <ToolbarButton
+            icon={ClipboardList}
+            label={`Actions${actionItemCount > 0 ? ` (${actionItemCount})` : ''}`}
+            onClick={onToggleActionItems}
+          />
+
+          {/* Complete Retro */}
+          <ToolbarButton
+            icon={CheckCircle2}
+            label="Complete Retro"
+            onClick={onCompleteRetro}
+          />
+        </>
       )}
-
-      {/* Timer controls */}
-      <TimerControls
-        timer={timer}
-        onStart={onTimerStart}
-        onPause={onTimerPause}
-        onResume={onTimerResume}
-        onReset={onTimerReset}
-      />
-
-      {/* Action Items */}
-      <ToolbarButton
-        icon={ClipboardList}
-        label={`Actions${actionItemCount > 0 ? ` (${actionItemCount})` : ''}`}
-        onClick={onToggleActionItems}
-      />
 
       {/* Participant count */}
       <div className="flex items-center gap-1.5 rounded-[var(--radius-md)] px-2.5 py-1.5 text-sm text-[var(--color-gray-5)]">

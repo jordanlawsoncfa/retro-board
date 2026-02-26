@@ -20,6 +20,7 @@ interface BoardState {
   createBoard: (title: string, description: string | null, template: BoardTemplate) => Promise<string>;
   fetchBoard: (boardId: string) => Promise<void>;
   updateSettings: (settings: Partial<BoardSettings>) => Promise<void>;
+  completeBoard: () => Promise<void>;
   reset: () => void;
 
   // Participants
@@ -145,6 +146,30 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     if (error) throw error;
 
     set({ board: { ...board, settings: newSettings } });
+  },
+
+  completeBoard: async () => {
+    const { board } = get();
+    if (!board) return;
+
+    const archivedAt = new Date().toISOString();
+    const { error } = await supabase
+      .from('boards')
+      .update({
+        archived_at: archivedAt,
+        settings: { ...board.settings, card_visibility: 'visible', board_locked: true },
+      })
+      .eq('id', board.id);
+
+    if (error) throw error;
+
+    set({
+      board: {
+        ...board,
+        archived_at: archivedAt,
+        settings: { ...board.settings, card_visibility: 'visible', board_locked: true },
+      },
+    });
   },
 
   joinBoard: async (boardId, displayName) => {

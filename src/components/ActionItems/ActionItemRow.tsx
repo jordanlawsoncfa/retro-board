@@ -8,6 +8,7 @@ interface ActionItemRowProps {
   participants: Participant[];
   onUpdate: (itemId: string, updates: Partial<Pick<ActionItem, 'description' | 'assignee' | 'due_date' | 'status'>>) => void;
   onDelete: (itemId: string) => void;
+  readOnly?: boolean;
 }
 
 const STATUS_CYCLE: ActionItemStatus[] = ['open', 'in_progress', 'done'];
@@ -18,7 +19,7 @@ const STATUS_ICONS = {
   done: Check,
 } as const;
 
-export function ActionItemRow({ item, participants, onUpdate, onDelete }: ActionItemRowProps) {
+export function ActionItemRow({ item, participants, onUpdate, onDelete, readOnly }: ActionItemRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(item.description);
 
@@ -40,16 +41,18 @@ export function ActionItemRow({ item, participants, onUpdate, onDelete }: Action
     )}>
       {/* Status toggle */}
       <button
-        onClick={() => onUpdate(item.id, { status: nextStatus })}
+        onClick={() => !readOnly && onUpdate(item.id, { status: nextStatus })}
+        disabled={readOnly}
         className={cn(
           'mt-0.5 shrink-0 rounded-full p-0.5 transition-colors',
+          readOnly && 'cursor-default',
           item.status === 'done'
             ? 'text-[var(--color-success)]'
             : item.status === 'in_progress'
               ? 'text-[var(--color-navy)]'
               : 'text-[var(--color-gray-4)] hover:text-[var(--color-gray-6)]'
         )}
-        title={`Mark as ${nextStatus.replace('_', ' ')}`}
+        title={readOnly ? item.status.replace('_', ' ') : `Mark as ${nextStatus.replace('_', ' ')}`}
       >
         <StatusIcon size={16} />
       </button>
@@ -70,9 +73,10 @@ export function ActionItemRow({ item, participants, onUpdate, onDelete }: Action
           />
         ) : (
           <p
-            onClick={() => setIsEditing(true)}
+            onClick={() => !readOnly && setIsEditing(true)}
             className={cn(
-              'cursor-pointer text-sm text-[var(--color-gray-8)]',
+              'text-sm text-[var(--color-gray-8)]',
+              !readOnly && 'cursor-pointer',
               item.status === 'done' && 'line-through'
             )}
           >
@@ -85,7 +89,11 @@ export function ActionItemRow({ item, participants, onUpdate, onDelete }: Action
           <select
             value={item.assignee || ''}
             onChange={(e) => onUpdate(item.id, { assignee: e.target.value || null })}
-            className="max-w-[120px] truncate rounded border-0 bg-transparent p-0 text-xs text-[var(--color-gray-4)] hover:text-[var(--color-gray-6)] focus:outline-none cursor-pointer"
+            disabled={readOnly}
+            className={cn(
+              'max-w-[120px] truncate rounded border-0 bg-transparent p-0 text-xs text-[var(--color-gray-4)] focus:outline-none',
+              readOnly ? 'cursor-default' : 'hover:text-[var(--color-gray-6)] cursor-pointer'
+            )}
           >
             <option value="">Unassigned</option>
             {participants.map((p) => (
@@ -100,19 +108,25 @@ export function ActionItemRow({ item, participants, onUpdate, onDelete }: Action
             type="date"
             value={item.due_date || ''}
             onChange={(e) => onUpdate(item.id, { due_date: e.target.value || null })}
-            className="rounded border-0 bg-transparent p-0 text-xs text-[var(--color-gray-4)] hover:text-[var(--color-gray-6)] focus:outline-none cursor-pointer"
+            disabled={readOnly}
+            className={cn(
+              'rounded border-0 bg-transparent p-0 text-xs text-[var(--color-gray-4)] focus:outline-none',
+              readOnly ? 'cursor-default' : 'hover:text-[var(--color-gray-6)] cursor-pointer'
+            )}
           />
         </div>
       </div>
 
       {/* Delete */}
-      <button
-        onClick={() => onDelete(item.id)}
-        className="shrink-0 rounded-[var(--radius-sm)] p-1 text-[var(--color-gray-3)] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)]"
-        title="Delete action item"
-      >
-        <Trash2 size={14} />
-      </button>
+      {!readOnly && (
+        <button
+          onClick={() => onDelete(item.id)}
+          className="shrink-0 rounded-[var(--radius-sm)] p-1 text-[var(--color-gray-3)] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)]"
+          title="Delete action item"
+        >
+          <Trash2 size={14} />
+        </button>
+      )}
     </div>
   );
 }

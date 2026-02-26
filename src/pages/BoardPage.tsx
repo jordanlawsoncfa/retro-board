@@ -43,11 +43,13 @@ export function BoardPage() {
     addActionItem,
     updateActionItem,
     deleteActionItem,
+    completeBoard,
   } = useBoardStore();
 
   const [participantName, setParticipantName] = useState('');
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showActionItems, setShowActionItems] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
   const sensors = useSensors(
@@ -160,6 +162,11 @@ export function BoardPage() {
     setTimeout(() => setLinkCopied(false), 2000);
   }, []);
 
+  const handleCompleteRetro = useCallback(async () => {
+    await completeBoard();
+    setShowCompleteModal(false);
+  }, [completeBoard]);
+
   if (loading) {
     return (
       <AppShell>
@@ -193,6 +200,7 @@ export function BoardPage() {
 
   const isJoined = !!currentParticipantId;
   const isObscured = board.settings.card_visibility === 'hidden';
+  const isCompleted = !!board.archived_at;
 
   return (
     <AppShell
@@ -209,6 +217,8 @@ export function BoardPage() {
             onTimerReset={timerReset}
             actionItemCount={actionItems.length}
             onToggleActionItems={() => setShowActionItems((v) => !v)}
+            isCompleted={isCompleted}
+            onCompleteRetro={() => setShowCompleteModal(true)}
           />
         ) : undefined
       }
@@ -218,7 +228,14 @@ export function BoardPage() {
         <div className="mx-auto max-w-[1400px]">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl text-[var(--color-gray-8)]">{board.title}</h2>
+              <h2 className="text-xl text-[var(--color-gray-8)]">
+                {board.title}
+                {isCompleted && (
+                  <span className="ml-2 inline-flex items-center rounded-[var(--radius-full)] bg-[var(--color-success)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-success)]">
+                    Completed
+                  </span>
+                )}
+              </h2>
               {board.description && (
                 <p className="mt-1 text-sm text-[var(--color-gray-5)]">{board.description}</p>
               )}
@@ -280,6 +297,7 @@ export function BoardPage() {
                       onUpdateCard={updateCard}
                       onDeleteCard={deleteCard}
                       onToggleVote={toggleVote}
+                      isCompleted={isCompleted}
                     />
                   ))}
               </div>
@@ -330,6 +348,27 @@ export function BoardPage() {
         </div>
       </Modal>
 
+      {/* Complete Retro Modal */}
+      <Modal
+        open={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+        title="Complete Retrospective"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-[var(--color-gray-5)]">
+            The board will become read-only. This cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setShowCompleteModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCompleteRetro}>
+              Complete
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Panel overlay */}
       {showActionItems && (
         <div
@@ -350,6 +389,7 @@ export function BoardPage() {
           onDeleteItem={deleteActionItem}
           onExportMarkdown={handleExportMarkdown}
           onExportCsv={handleExportCsv}
+          readOnly={isCompleted}
         />
       )}
     </AppShell>

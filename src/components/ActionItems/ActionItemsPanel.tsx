@@ -14,6 +14,7 @@ interface ActionItemsPanelProps {
   onDeleteItem: (itemId: string) => void;
   onExportMarkdown: () => void;
   onExportCsv: () => void;
+  readOnly?: boolean;
 }
 
 export function ActionItemsPanel({
@@ -26,6 +27,7 @@ export function ActionItemsPanel({
   onDeleteItem,
   onExportMarkdown,
   onExportCsv,
+  readOnly,
 }: ActionItemsPanelProps) {
   const [newDescription, setNewDescription] = useState('');
 
@@ -74,24 +76,26 @@ export function ActionItemsPanel({
       </div>
 
       {/* Add item form */}
-      <div className="border-b border-[var(--color-gray-1)] px-4 py-3">
-        <div className="flex gap-2">
-          <input
-            value={newDescription}
-            onChange={(e) => setNewDescription(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            placeholder="Add an action item..."
-            className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] px-3 py-2 text-sm focus:border-[var(--color-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--color-navy)]"
-          />
-          <button
-            onClick={handleAdd}
-            disabled={!newDescription.trim()}
-            className="flex items-center gap-1 rounded-[var(--radius-md)] bg-[var(--color-navy)] px-3 py-2 text-sm text-white hover:bg-[var(--color-navy-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            <Plus size={14} />
-          </button>
+      {!readOnly && (
+        <div className="border-b border-[var(--color-gray-1)] px-4 py-3">
+          <div className="flex gap-2">
+            <input
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              placeholder="Add an action item..."
+              className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] px-3 py-2 text-sm focus:border-[var(--color-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--color-navy)]"
+            />
+            <button
+              onClick={handleAdd}
+              disabled={!newDescription.trim()}
+              className="flex items-center gap-1 rounded-[var(--radius-md)] bg-[var(--color-navy)] px-3 py-2 text-sm text-white hover:bg-[var(--color-navy-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Items list */}
       <div className="flex-1 overflow-y-auto px-4 py-3">
@@ -108,6 +112,7 @@ export function ActionItemsPanel({
                 participants={participants}
                 onUpdate={onUpdateItem}
                 onDelete={onDeleteItem}
+                readOnly={readOnly}
               />
             ))}
             {doneItems.length > 0 && (

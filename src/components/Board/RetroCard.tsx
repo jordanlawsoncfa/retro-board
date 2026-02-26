@@ -18,6 +18,7 @@ interface RetroCardProps {
   onUpdate: (cardId: string, text: string) => void;
   onDelete: (cardId: string) => void;
   onToggleVote: (cardId: string) => void;
+  isCompleted?: boolean;
 }
 
 export function RetroCard({
@@ -35,6 +36,7 @@ export function RetroCard({
   onUpdate,
   onDelete,
   onToggleVote,
+  isCompleted,
 }: RetroCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(text);
@@ -113,7 +115,7 @@ export function RetroCard({
 
             <div className="flex items-center gap-1">
               {/* Vote button */}
-              {votingEnabled && (
+              {votingEnabled && !isCompleted && (
                 <button
                   onClick={() => onToggleVote(id)}
                   disabled={!hasVoted && voteLimitReached}
@@ -137,7 +139,7 @@ export function RetroCard({
               )}
 
               {/* Author actions (visible on hover) */}
-              {isAuthor && (
+              {isAuthor && !isCompleted && (
                 <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                   <button
                     onClick={() => {

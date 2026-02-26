@@ -89,7 +89,7 @@ export function ListView({
     }
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
+  const sortIcon = (field: SortField) => {
     if (sortField !== field) return null;
     return sortDir === 'asc' ? (
       <ArrowUp size={12} className="shrink-0" />
@@ -110,7 +110,7 @@ export function ListView({
                   className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-gray-5)] hover:text-[var(--color-gray-8)]"
                 >
                   Column
-                  <SortIcon field="column" />
+                  {sortIcon('column')}
                 </button>
               </th>
               <th className="px-4 py-3 text-left">
@@ -119,7 +119,7 @@ export function ListView({
                   className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-gray-5)] hover:text-[var(--color-gray-8)]"
                 >
                   Card
-                  <SortIcon field="card" />
+                  {sortIcon('card')}
                 </button>
               </th>
               <th className="px-4 py-3 text-left">
@@ -128,7 +128,7 @@ export function ListView({
                   className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-gray-5)] hover:text-[var(--color-gray-8)]"
                 >
                   Author
-                  <SortIcon field="author" />
+                  {sortIcon('author')}
                 </button>
               </th>
               {votingEnabled && (
@@ -138,7 +138,7 @@ export function ListView({
                     className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-gray-5)] hover:text-[var(--color-gray-8)]"
                   >
                     Votes
-                    <SortIcon field="votes" />
+                    {sortIcon('votes')}
                   </button>
                 </th>
               )}

@@ -21,15 +21,12 @@ export interface BoardSettings {
   card_visibility: 'hidden' | 'visible';
   voting_enabled: boolean;
   max_votes_per_participant: number;
-  max_votes_per_column: number;
-  max_votes_per_card: number;
   secret_voting: boolean;
   board_locked: boolean;
   card_creation_disabled: boolean;
   anonymous_cards: boolean;
   timer: TimerState;
   highlighted_card_id: string | null;
-  revealed_columns: string[];
 }
 
 export interface TimerState {

@@ -4,15 +4,12 @@ export const DEFAULT_BOARD_SETTINGS: import('@/types').BoardSettings = {
   card_visibility: 'hidden',
   voting_enabled: false,
   max_votes_per_participant: 5,
-  max_votes_per_column: 99,
-  max_votes_per_card: 3,
   secret_voting: false,
   board_locked: false,
   card_creation_disabled: false,
   anonymous_cards: false,
   highlighted_card_id: null,
   timer: { duration: 0, remaining: 0, status: 'idle', started_at: null },
-  revealed_columns: [],
 };
 
 export const TIMER_PRESETS = [

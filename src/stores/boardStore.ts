@@ -17,7 +17,7 @@ interface BoardState {
   currentParticipantId: string | null;
 
   // Board lifecycle
-  createBoard: (title: string, description: string | null, template: BoardTemplate) => Promise<string>;
+  createBoard: (title: string, description: string | null, template: BoardTemplate, displayName?: string) => Promise<string>;
   fetchBoard: (boardId: string) => Promise<void>;
   updateSettings: (settings: Partial<BoardSettings>) => Promise<void>;
   completeBoard: () => Promise<void>;
@@ -25,6 +25,8 @@ interface BoardState {
 
   // Participants
   joinBoard: (boardId: string, displayName: string) => Promise<void>;
+  updateParticipant: (participantId: string, updates: Partial<Pick<Participant, 'is_admin'>>) => Promise<void>;
+  removeParticipant: (participantId: string) => Promise<void>;
 
   // Columns
   addColumn: (title: string, color: string, description?: string) => Promise<void>;
@@ -45,6 +47,10 @@ interface BoardState {
   updateActionItem: (itemId: string, updates: Partial<Pick<ActionItem, 'description' | 'assignee' | 'due_date' | 'status'>>) => Promise<void>;
   deleteActionItem: (itemId: string) => Promise<void>;
 
+  // Presence
+  onlineParticipantIds: string[];
+  setOnlineParticipantIds: (ids: string[]) => void;
+
   // Realtime
   subscribeToBoard: (boardId: string) => () => void;
 }
@@ -59,21 +65,24 @@ const initialState = {
   loading: false,
   error: null as string | null,
   currentParticipantId: null as string | null,
+  onlineParticipantIds: [] as string[],
 };
 
 export const useBoardStore = create<BoardState>((set, get) => ({
   ...initialState,
 
-  createBoard: async (title, description, template) => {
+  createBoard: async (title, description, template, displayName?) => {
     const boardId = nanoid(10);
     const templateDef = BOARD_TEMPLATES.find((t) => t.id === template);
+
+    const participantId = crypto.randomUUID();
 
     const { error: boardError } = await supabase.from('boards').insert({
       id: boardId,
       title,
       description,
       template,
-      created_by: crypto.randomUUID(), // placeholder — will use auth user ID later
+      created_by: participantId,
       settings: DEFAULT_BOARD_SETTINGS,
     });
 
@@ -91,6 +100,33 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
       const { error: colError } = await supabase.from('columns').insert(columnsToInsert);
       if (colError) throw colError;
+    }
+
+    // Auto-join creator as admin
+    if (displayName) {
+      const { error: joinError } = await supabase.from('participants').insert({
+        id: participantId,
+        board_id: boardId,
+        display_name: displayName,
+        is_admin: true,
+      });
+      if (joinError) throw joinError;
+
+      sessionStorage.setItem(`retro-pid-${boardId}`, participantId);
+      set((state) => ({
+        currentParticipantId: participantId,
+        participants: [
+          ...state.participants,
+          {
+            id: participantId,
+            board_id: boardId,
+            display_name: displayName,
+            is_admin: true,
+            joined_at: new Date().toISOString(),
+            last_seen: new Date().toISOString(),
+          },
+        ],
+      }));
     }
 
     return boardId;
@@ -173,6 +209,17 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   joinBoard: async (boardId, displayName) => {
+    // Check if already joined (e.g., creator who auto-joined in createBoard)
+    const stored = sessionStorage.getItem(`retro-pid-${boardId}`);
+    if (stored) {
+      const { participants } = get();
+      const existing = participants.find((p) => p.id === stored);
+      if (existing) {
+        set({ currentParticipantId: stored });
+        return;
+      }
+    }
+
     const participantId = crypto.randomUUID();
 
     const { error } = await supabase.from('participants').insert({
@@ -199,6 +246,30 @@ export const useBoardStore = create<BoardState>((set, get) => ({
           last_seen: new Date().toISOString(),
         },
       ],
+    }));
+  },
+
+  updateParticipant: async (participantId, updates) => {
+    const { error } = await supabase
+      .from('participants')
+      .update(updates)
+      .eq('id', participantId);
+    if (error) throw error;
+    set((state) => ({
+      participants: state.participants.map((p) =>
+        p.id === participantId ? { ...p, ...updates } : p
+      ),
+    }));
+  },
+
+  removeParticipant: async (participantId) => {
+    const { error } = await supabase
+      .from('participants')
+      .delete()
+      .eq('id', participantId);
+    if (error) throw error;
+    set((state) => ({
+      participants: state.participants.filter((p) => p.id !== participantId),
     }));
   },
 
@@ -416,6 +487,10 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }));
   },
 
+  // --- Presence ---
+
+  setOnlineParticipantIds: (ids) => set({ onlineParticipantIds: ids }),
+
   // --- Realtime ---
 
   subscribeToBoard: (boardId) => {
@@ -508,6 +583,26 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       )
       .on(
         'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'participants', filter: `board_id=eq.${boardId}` },
+        (payload) => {
+          set((state) => ({
+            participants: state.participants.map((p) =>
+              p.id === payload.new.id ? { ...payload.new as Participant } : p
+            ),
+          }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'participants', filter: `board_id=eq.${boardId}` },
+        (payload) => {
+          set((state) => ({
+            participants: state.participants.filter((p) => p.id !== payload.old.id),
+          }));
+        }
+      )
+      .on(
+        'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'boards', filter: `id=eq.${boardId}` },
         (payload) => {
           set({ board: payload.new as Board });
@@ -548,5 +643,5 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     };
   },
 
-  reset: () => set(initialState),
+  reset: () => set({ ...initialState, onlineParticipantIds: [] }),
 }));

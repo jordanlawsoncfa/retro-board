@@ -1,0 +1,279 @@
+@import "tailwindcss";
+
+/*
+ * RetroBoard — Brand Design Tokens
+ * Derived from brand guide: Color palette, Typography (Apercu Std + Rooney), Text Styles
+ * All theme values available as CSS custom properties + Tailwind @theme tokens.
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. CSS Custom Properties (usable anywhere, not just Tailwind)      */
+/* ------------------------------------------------------------------ */
+:root {
+  /* --- Primary Palette --- */
+  --color-primary: #DD0031;
+  --color-primary-hover: #B00027;
+  --color-primary-pressed: #84001D;
+  --color-white: #FFFFFF;
+
+  /* --- Secondary Palette --- */
+  --color-navy: #004F71;
+  --color-navy-hover: #003E59;
+  --color-navy-pressed: #002F43;
+  --color-warm-gray: #DAD7D2;
+  --color-warm-white: #F4F1EC;
+  --color-dark-gray: #5B6770;
+  --color-dark-red: #6D0929;
+
+  /* --- Tertiary Brand Palette --- */
+  --color-blue: #3EB1C8;
+  --color-light-blue: #AAD6D2;
+  --color-bright-red: #FF1158;
+  --color-orange: #E33205;
+  --color-light-orange: #FA937D;
+  --color-pink: #FBC1B8;
+  --color-dark-purple: #5D5754;
+  --color-purple: #994878;
+  --color-dark-green: #00633B;
+  --color-green: #249E6B;
+  --color-light-green: #B2CFA7;
+  --color-yellow: #FFB549;
+  --color-light-yellow: #F5E1A4;
+  --color-cream: #F5E3CC;
+
+  /* --- Grayscale --- */
+  --color-gray-1: #ECEDEE;
+  --color-gray-2: #CCCFD0;
+  --color-gray-3: #A9ACAF;
+  --color-gray-4: #93989B;
+  --color-gray-5: #80878C;
+  --color-gray-6: #5B6770;
+  --color-gray-7: #37424A;
+  --color-gray-8: #1E272F;
+
+  /* --- Semantic Colors --- */
+  --color-error: #B8072F;
+  --color-warning: #FBC111;
+  --color-success: #077E4C;
+  --color-info: #0C6B9A;
+
+  /* --- Text Colors --- */
+  --color-text-default: #5B6770;
+  --color-text-dark-bg: #FFFFFF;
+  --color-text-disabled: #A9ACAF;
+  --color-text-primary: #DD0031;
+  --color-text-secondary: #004F71;
+
+  /* --- Typography (Apercu Std + Rooney) --- */
+  --font-primary: 'Apercu Std', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-secondary: 'Rooney', 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* --- Heading scale --- */
+  --text-h1: 3rem;         /* 48px */
+  --lh-h1: 3.5rem;         /* 56px */
+  --text-h2: 2rem;          /* 32px */
+  --lh-h2: 2.5rem;          /* 40px */
+  --text-h3: 1.5rem;        /* 24px */
+  --lh-h3: 2rem;            /* 32px */
+  --text-h4: 1.25rem;       /* 20px */
+  --lh-h4: 1.75rem;         /* 28px */
+
+  /* --- Subtitle scale (Rooney, UPPERCASE) --- */
+  --text-s1: 1.25rem;       /* 20px */
+  --lh-s1: 2rem;            /* 32px */
+  --text-s2: 1rem;           /* 16px */
+  --lh-s2: 1.5rem;          /* 24px */
+  --text-s3: 0.875rem;      /* 14px */
+  --lh-s3: 1.25rem;         /* 20px */
+
+  /* --- Body text --- */
+  --text-body: 1rem;         /* 16px */
+  --lh-body: 1.5rem;        /* 24px */
+  --text-body-sm: 0.875rem; /* 14px */
+  --lh-body-sm: 1.25rem;    /* 20px */
+  --text-caption: 0.75rem;  /* 12px */
+  --lh-caption: 1rem;       /* 16px */
+
+  /* --- Spacing scale (8pt grid) --- */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+  --space-20: 5rem;    /* 80px */
+  --space-24: 6rem;    /* 96px */
+
+  /* --- Border radius --- */
+  --radius-sm: 0.25rem;   /* 4px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-2xl: 1.5rem;   /* 24px */
+  --radius-full: 9999px;
+
+  /* --- Shadows --- */
+  --shadow-sm: 0 1px 2px rgba(30, 39, 47, 0.06);
+  --shadow-md: 0 4px 12px rgba(30, 39, 47, 0.08);
+  --shadow-lg: 0 12px 32px rgba(30, 39, 47, 0.12);
+  --shadow-xl: 0 20px 48px rgba(30, 39, 47, 0.16);
+}
+
+
+/* ------------------------------------------------------------------ */
+/* 2. Tailwind v4 @theme — maps tokens into Tailwind utilities        */
+/* ------------------------------------------------------------------ */
+@theme {
+  /* Colors */
+  --color-primary: #DD0031;
+  --color-primary-hover: #B00027;
+  --color-primary-pressed: #84001D;
+
+  --color-navy: #004F71;
+  --color-navy-hover: #003E59;
+  --color-navy-pressed: #002F43;
+
+  --color-warm-gray: #DAD7D2;
+  --color-warm-white: #F4F1EC;
+  --color-dark-gray: #5B6770;
+  --color-dark-red: #6D0929;
+
+  --color-blue: #3EB1C8;
+  --color-light-blue: #AAD6D2;
+  --color-bright-red: #FF1158;
+  --color-orange: #E33205;
+  --color-light-orange: #FA937D;
+  --color-pink: #FBC1B8;
+  --color-dark-purple: #5D5754;
+  --color-purple: #994878;
+  --color-dark-green: #00633B;
+  --color-green: #249E6B;
+  --color-light-green: #B2CFA7;
+  --color-yellow: #FFB549;
+  --color-light-yellow: #F5E1A4;
+  --color-cream: #F5E3CC;
+
+  --color-gray-1: #ECEDEE;
+  --color-gray-2: #CCCFD0;
+  --color-gray-3: #A9ACAF;
+  --color-gray-4: #93989B;
+  --color-gray-5: #80878C;
+  --color-gray-6: #5B6770;
+  --color-gray-7: #37424A;
+  --color-gray-8: #1E272F;
+
+  --color-error: #B8072F;
+  --color-warning: #FBC111;
+  --color-success: #077E4C;
+  --color-info: #0C6B9A;
+
+  /* Font families */
+  --font-primary: 'Apercu Std', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-secondary: 'Rooney', 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(30, 39, 47, 0.06);
+  --shadow-md: 0 4px 12px rgba(30, 39, 47, 0.08);
+  --shadow-lg: 0 12px 32px rgba(30, 39, 47, 0.12);
+  --shadow-xl: 0 20px 48px rgba(30, 39, 47, 0.16);
+}
+
+
+/* ------------------------------------------------------------------ */
+/* 3. Base layer — global resets and typography defaults               */
+/* ------------------------------------------------------------------ */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: var(--font-primary);
+    font-size: var(--text-body);
+    line-height: var(--lh-body);
+    color: var(--color-gray-7);
+    background-color: var(--color-warm-white);
+    margin: 0;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-primary);
+    font-weight: 700;
+    color: var(--color-gray-8);
+  }
+
+  h1 { font-size: var(--text-h1); line-height: var(--lh-h1); }
+  h2 { font-size: var(--text-h2); line-height: var(--lh-h2); }
+  h3 { font-size: var(--text-h3); line-height: var(--lh-h3); }
+  h4 { font-size: var(--text-h4); line-height: var(--lh-h4); }
+
+  a {
+    color: var(--color-navy);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--color-navy-hover);
+    text-decoration: underline;
+  }
+
+  /* Focus ring for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--color-navy);
+    outline-offset: 2px;
+  }
+}
+
+
+/* ------------------------------------------------------------------ */
+/* 4. Component utilities                                              */
+/* ------------------------------------------------------------------ */
+/* Modal animation keyframes */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@layer components {
+  /* Subtitle style (Rooney, bold, uppercase) */
+  .subtitle-1 {
+    font-family: var(--font-secondary);
+    font-size: var(--text-s1);
+    line-height: var(--lh-s1);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .subtitle-2 {
+    font-family: var(--font-secondary);
+    font-size: var(--text-s2);
+    line-height: var(--lh-s2);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .subtitle-3 {
+    font-family: var(--font-secondary);
+    font-size: var(--text-s3);
+    line-height: var(--lh-s3);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}

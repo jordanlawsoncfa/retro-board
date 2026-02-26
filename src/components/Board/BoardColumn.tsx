@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { ThumbsUp } from 'lucide-react';
 import { RetroCard } from './RetroCard';
 import { SortableCard } from './SortableCard';
 import { AddCardForm } from './AddCardForm';
@@ -13,7 +14,9 @@ interface BoardColumnProps {
   currentParticipantId: string | null;
   isObscured: boolean;
   votingEnabled: boolean;
+  secretVoting: boolean;
   cardCreationDisabled: boolean;
+  maxVotesPerParticipant: number;
   onAddCard: (columnId: string, text: string) => void;
   onUpdateCard: (cardId: string, text: string) => void;
   onDeleteCard: (cardId: string) => void;
@@ -27,7 +30,9 @@ export function BoardColumn({
   currentParticipantId,
   isObscured,
   votingEnabled,
+  secretVoting,
   cardCreationDisabled,
+  maxVotesPerParticipant,
   onAddCard,
   onUpdateCard,
   onDeleteCard,
@@ -41,6 +46,17 @@ export function BoardColumn({
   );
 
   const cardIds = useMemo(() => sortedCards.map((c) => c.id), [sortedCards]);
+
+  const columnVoteCount = useMemo(
+    () => votes.filter((v) => cards.some((c) => c.id === v.card_id)).length,
+    [votes, cards]
+  );
+
+  const voteLimitReached = useMemo(() => {
+    if (!currentParticipantId) return false;
+    const myVoteCount = votes.filter((v) => v.voter_id === currentParticipantId).length;
+    return myVoteCount >= maxVotesPerParticipant;
+  }, [votes, currentParticipantId, maxVotesPerParticipant]);
 
   return (
     <div
@@ -61,6 +77,12 @@ export function BoardColumn({
         <span className="rounded-[var(--radius-full)] bg-[var(--color-gray-1)] px-2 py-0.5 text-xs font-medium text-[var(--color-gray-5)]">
           {cards.length}
         </span>
+        {votingEnabled && !secretVoting && columnVoteCount > 0 && (
+          <span className="flex items-center gap-1 rounded-[var(--radius-full)] bg-[var(--color-navy)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-navy)]">
+            <ThumbsUp size={10} />
+            {columnVoteCount}
+          </span>
+        )}
       </div>
 
       {/* Column description */}
@@ -90,6 +112,8 @@ export function BoardColumn({
                   isAuthor={card.author_id === currentParticipantId}
                   isObscured={isObscured}
                   votingEnabled={votingEnabled}
+                  secretVoting={secretVoting}
+                  voteLimitReached={voteLimitReached}
                   onUpdate={onUpdateCard}
                   onDelete={onDeleteCard}
                   onToggleVote={onToggleVote}

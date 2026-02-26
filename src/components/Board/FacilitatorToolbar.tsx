@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Lock, Unlock, Vote, Users, Share2 } from 'lucide-react';
+import { Eye, EyeOff, Lock, Unlock, Vote, Users, Share2, ClipboardList } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { TimerControls } from '@/components/Timer';
 import type { BoardSettings, TimerState } from '@/types';
@@ -13,6 +13,8 @@ interface FacilitatorToolbarProps {
   onTimerPause: () => void;
   onTimerResume: () => void;
   onTimerReset: () => void;
+  actionItemCount: number;
+  onToggleActionItems: () => void;
 }
 
 export function FacilitatorToolbar({
@@ -25,6 +27,8 @@ export function FacilitatorToolbar({
   onTimerPause,
   onTimerResume,
   onTimerReset,
+  actionItemCount,
+  onToggleActionItems,
 }: FacilitatorToolbarProps) {
   const isRevealed = settings.card_visibility === 'visible';
   const isLocked = settings.board_locked;
@@ -82,6 +86,13 @@ export function FacilitatorToolbar({
         onPause={onTimerPause}
         onResume={onTimerResume}
         onReset={onTimerReset}
+      />
+
+      {/* Action Items */}
+      <ToolbarButton
+        icon={ClipboardList}
+        label={`Actions${actionItemCount > 0 ? ` (${actionItemCount})` : ''}`}
+        onClick={onToggleActionItems}
       />
 
       {/* Divider */}

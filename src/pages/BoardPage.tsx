@@ -14,6 +14,8 @@ import { BoardColumn, FacilitatorToolbar, VoteStatus } from '@/components/Board'
 import { useBoardStore } from '@/stores/boardStore';
 import { useTimer } from '@/hooks/useTimer';
 import { TimerDisplay } from '@/components/Timer';
+import { ActionItemsPanel } from '@/components/ActionItems';
+import { exportMarkdown, exportCsv } from '@/utils/export';
 
 export function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -36,10 +38,15 @@ export function BoardPage() {
     toggleVote,
     updateSettings,
     subscribeToBoard,
+    actionItems,
+    addActionItem,
+    updateActionItem,
+    deleteActionItem,
   } = useBoardStore();
 
   const [participantName, setParticipantName] = useState('');
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showActionItems, setShowActionItems] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -121,6 +128,30 @@ export function BoardPage() {
     [addCard]
   );
 
+  const handleExportMarkdown = useCallback(() => {
+    if (!board) return;
+    exportMarkdown({
+      boardTitle: board.title,
+      boardDescription: board.description,
+      columns,
+      cards,
+      votes,
+      actionItems,
+    });
+  }, [board, columns, cards, votes, actionItems]);
+
+  const handleExportCsv = useCallback(() => {
+    if (!board) return;
+    exportCsv({
+      boardTitle: board.title,
+      boardDescription: board.description,
+      columns,
+      cards,
+      votes,
+      actionItems,
+    });
+  }, [board, columns, cards, votes, actionItems]);
+
   if (loading) {
     return (
       <AppShell>
@@ -169,6 +200,8 @@ export function BoardPage() {
             onTimerPause={timerPause}
             onTimerResume={timerResume}
             onTimerReset={timerReset}
+            actionItemCount={actionItems.length}
+            onToggleActionItems={() => setShowActionItems((v) => !v)}
           />
         ) : undefined
       }
@@ -282,6 +315,29 @@ export function BoardPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Panel overlay */}
+      {showActionItems && (
+        <div
+          className="fixed inset-0 z-30 bg-black/20"
+          onClick={() => setShowActionItems(false)}
+        />
+      )}
+
+      {/* Action Items Panel */}
+      {isJoined && (
+        <ActionItemsPanel
+          open={showActionItems}
+          onClose={() => setShowActionItems(false)}
+          actionItems={actionItems}
+          participants={participants}
+          onAddItem={addActionItem}
+          onUpdateItem={updateActionItem}
+          onDeleteItem={deleteActionItem}
+          onExportMarkdown={handleExportMarkdown}
+          onExportCsv={handleExportCsv}
+        />
+      )}
     </AppShell>
   );
 }

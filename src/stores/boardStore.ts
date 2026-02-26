@@ -39,6 +39,11 @@ interface BoardState {
   // Voting
   toggleVote: (cardId: string) => Promise<void>;
 
+  // Action Items
+  addActionItem: (description: string, assignee?: string, dueDate?: string) => Promise<void>;
+  updateActionItem: (itemId: string, updates: Partial<Pick<ActionItem, 'description' | 'assignee' | 'due_date' | 'status'>>) => Promise<void>;
+  deleteActionItem: (itemId: string) => Promise<void>;
+
   // Realtime
   subscribeToBoard: (boardId: string) => () => void;
 }
@@ -344,6 +349,48 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }
   },
 
+  // --- Action Items ---
+
+  addActionItem: async (description, assignee, dueDate) => {
+    const { board } = get();
+    if (!board) return;
+
+    const newItem = {
+      board_id: board.id,
+      description,
+      assignee: assignee || null,
+      due_date: dueDate || null,
+      status: 'open' as const,
+    };
+
+    const { data, error } = await supabase.from('action_items').insert(newItem).select().single();
+    if (error) throw error;
+
+    set((state) => ({
+      actionItems: [...state.actionItems, data as ActionItem],
+    }));
+  },
+
+  updateActionItem: async (itemId, updates) => {
+    const { error } = await supabase.from('action_items').update(updates).eq('id', itemId);
+    if (error) throw error;
+
+    set((state) => ({
+      actionItems: state.actionItems.map((item) =>
+        item.id === itemId ? { ...item, ...updates } : item
+      ),
+    }));
+  },
+
+  deleteActionItem: async (itemId) => {
+    const { error } = await supabase.from('action_items').delete().eq('id', itemId);
+    if (error) throw error;
+
+    set((state) => ({
+      actionItems: state.actionItems.filter((item) => item.id !== itemId),
+    }));
+  },
+
   // --- Realtime ---
 
   subscribeToBoard: (boardId) => {
@@ -439,6 +486,34 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         { event: 'UPDATE', schema: 'public', table: 'boards', filter: `id=eq.${boardId}` },
         (payload) => {
           set({ board: payload.new as Board });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'action_items', filter: `board_id=eq.${boardId}` },
+        (payload) => {
+          set((state) => {
+            if (state.actionItems.some((a) => a.id === payload.new.id)) return state;
+            return { actionItems: [...state.actionItems, payload.new as ActionItem] };
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'action_items', filter: `board_id=eq.${boardId}` },
+        (payload) => {
+          set((state) => ({
+            actionItems: state.actionItems.map((a) => (a.id === payload.new.id ? (payload.new as ActionItem) : a)),
+          }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'action_items', filter: `board_id=eq.${boardId}` },
+        (payload) => {
+          set((state) => ({
+            actionItems: state.actionItems.filter((a) => a.id !== payload.old.id),
+          }));
         }
       )
       .subscribe();

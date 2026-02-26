@@ -58,12 +58,12 @@ export function RetroCard({
     <div
       className={cn(
         'group relative rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-white p-3 shadow-sm',
-        'transition-all duration-200',
+        'transition-[filter] duration-400 ease-out',
         isObscured && !isAuthor && 'select-none'
       )}
       style={{
         backgroundColor: color || undefined,
-        filter: isObscured && !isAuthor ? 'blur(6px)' : undefined,
+        filter: isObscured && !isAuthor ? 'blur(6px)' : 'blur(0px)',
       }}
     >
       {isEditing ? (

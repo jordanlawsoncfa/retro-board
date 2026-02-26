@@ -41,6 +41,7 @@ export function RetroCard({
 }: RetroCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(text);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
   const handleSave = () => {
     const trimmed = editText.trim();
@@ -66,7 +67,8 @@ export function RetroCard({
       className={cn(
         'group relative rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-white p-3 shadow-sm',
         'transition-[filter] duration-400 ease-out',
-        isObscured && !isAuthor && 'select-none'
+        isObscured && !isAuthor && 'select-none',
+        colorPickerOpen && 'z-20'
       )}
       style={{
         backgroundColor: color || undefined,
@@ -145,6 +147,7 @@ export function RetroCard({
                   <CardColorPicker
                     currentColor={color}
                     onSelectColor={(newColor) => onUpdate(id, { color: newColor })}
+                    onOpenChange={setColorPickerOpen}
                   />
                   <button
                     onClick={() => {

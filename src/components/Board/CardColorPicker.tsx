@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Palette, X } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { CARD_COLORS } from '@/utils/constants';
@@ -6,27 +6,33 @@ import { CARD_COLORS } from '@/utils/constants';
 interface CardColorPickerProps {
   currentColor: string | null;
   onSelectColor: (color: string | null) => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function CardColorPicker({ currentColor, onSelectColor }: CardColorPickerProps) {
+export function CardColorPicker({ currentColor, onSelectColor, onOpenChange }: CardColorPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  const setOpen = useCallback((open: boolean) => {
+    setIsOpen(open);
+    onOpenChange?.(open);
+  }, [onOpenChange]);
 
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
+        setOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, setOpen]);
 
   return (
     <div className="relative" ref={pickerRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setOpen(!isOpen)}
         className="rounded-[var(--radius-sm)] p-1 text-[var(--color-gray-4)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-6)]"
         aria-label="Change card color"
       >
@@ -34,13 +40,13 @@ export function CardColorPicker({ currentColor, onSelectColor }: CardColorPicker
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-10 mt-1 flex gap-1 rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-white p-2 shadow-lg">
+        <div className="absolute right-0 top-full z-30 mt-1 flex gap-1 rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-white p-2 shadow-lg">
           {CARD_COLORS.map((c) => (
             <button
               key={c.name}
               onClick={() => {
                 onSelectColor(c.value);
-                setIsOpen(false);
+                setOpen(false);
               }}
               className={cn(
                 'h-6 w-6 rounded-full border-2 transition-transform hover:scale-110',

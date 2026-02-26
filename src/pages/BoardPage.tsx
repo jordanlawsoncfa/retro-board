@@ -10,7 +10,7 @@ import {
 } from '@dnd-kit/core';
 import { AppShell } from '@/components/Layout';
 import { Button, Input, Modal } from '@/components/common';
-import { BoardColumn, FacilitatorToolbar } from '@/components/Board';
+import { BoardColumn, FacilitatorToolbar, VoteStatus } from '@/components/Board';
 import { useBoardStore } from '@/stores/boardStore';
 
 export function BoardPage() {
@@ -165,10 +165,20 @@ export function BoardPage() {
       {/* Board header */}
       <div className="border-b border-[var(--color-gray-1)] bg-white px-4 py-3 sm:px-6">
         <div className="mx-auto max-w-[1400px]">
-          <h2 className="text-xl text-[var(--color-gray-8)]">{board.title}</h2>
-          {board.description && (
-            <p className="mt-1 text-sm text-[var(--color-gray-5)]">{board.description}</p>
-          )}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl text-[var(--color-gray-8)]">{board.title}</h2>
+              {board.description && (
+                <p className="mt-1 text-sm text-[var(--color-gray-5)]">{board.description}</p>
+              )}
+            </div>
+            {isJoined && board.settings.voting_enabled && (
+              <VoteStatus
+                votesUsed={votes.filter((v) => v.voter_id === currentParticipantId).length}
+                maxVotes={board.settings.max_votes_per_participant}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -198,9 +208,11 @@ export function BoardPage() {
                       currentParticipantId={currentParticipantId}
                       isObscured={isObscured}
                       votingEnabled={board.settings.voting_enabled}
+                      secretVoting={board.settings.secret_voting}
                       cardCreationDisabled={
                         board.settings.card_creation_disabled || board.settings.board_locked
                       }
+                      maxVotesPerParticipant={board.settings.max_votes_per_participant}
                       onAddCard={handleAddCard}
                       onUpdateCard={updateCard}
                       onDeleteCard={deleteCard}

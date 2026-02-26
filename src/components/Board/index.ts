@@ -3,3 +3,4 @@ export { RetroCard } from './RetroCard';
 export { SortableCard } from './SortableCard';
 export { AddCardForm } from './AddCardForm';
 export { FacilitatorToolbar } from './FacilitatorToolbar';
+export { VoteStatus } from './VoteStatus';

@@ -13,6 +13,8 @@ interface RetroCardProps {
   isAuthor: boolean;
   isObscured: boolean;
   votingEnabled: boolean;
+  secretVoting: boolean;
+  voteLimitReached: boolean;
   onUpdate: (cardId: string, text: string) => void;
   onDelete: (cardId: string) => void;
   onToggleVote: (cardId: string) => void;
@@ -28,6 +30,8 @@ export function RetroCard({
   isAuthor,
   isObscured,
   votingEnabled,
+  secretVoting,
+  voteLimitReached,
   onUpdate,
   onDelete,
   onToggleVote,
@@ -112,16 +116,23 @@ export function RetroCard({
               {votingEnabled && (
                 <button
                   onClick={() => onToggleVote(id)}
+                  disabled={!hasVoted && voteLimitReached}
                   className={cn(
                     'flex items-center gap-1 rounded-[var(--radius-full)] px-2 py-0.5 text-xs transition-colors',
                     hasVoted
                       ? 'bg-[var(--color-navy)]/10 text-[var(--color-navy)] font-medium'
-                      : 'text-[var(--color-gray-4)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-6)]'
+                      : voteLimitReached
+                        ? 'cursor-not-allowed text-[var(--color-gray-3)]'
+                        : 'text-[var(--color-gray-4)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-6)]'
                   )}
-                  aria-label={hasVoted ? 'Remove vote' : 'Vote for this card'}
+                  aria-label={hasVoted ? 'Remove vote' : voteLimitReached ? 'Vote limit reached' : 'Vote for this card'}
+                  title={voteLimitReached && !hasVoted ? 'No votes remaining' : undefined}
                 >
                   <ThumbsUp size={12} />
-                  {voteCount > 0 && <span>{voteCount}</span>}
+                  {secretVoting
+                    ? (hasVoted && <span className="text-[10px]">Voted</span>)
+                    : (voteCount > 0 && <span>{voteCount}</span>)
+                  }
                 </button>
               )}
 

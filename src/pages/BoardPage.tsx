@@ -209,11 +209,13 @@ export function BoardPage() {
   const isJoined = !!currentParticipantId;
   const isObscured = board.settings.card_visibility === 'hidden';
   const isCompleted = !!board.archived_at;
+  const currentParticipant = participants.find((p) => p.id === currentParticipantId);
+  const isAdmin = currentParticipant?.is_admin ?? false;
 
   return (
     <AppShell
       headerRight={
-        isJoined ? (
+        isAdmin && !isCompleted ? (
           <FacilitatorToolbar
             settings={board.settings}
             participantCount={participants.length}

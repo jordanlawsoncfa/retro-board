@@ -13,7 +13,9 @@ export const DEFAULT_BOARD_SETTINGS: import('@/types').BoardSettings = {
 };
 
 export const TIMER_PRESETS = [
+  { label: '1 min', seconds: 60 },
   { label: '2 min', seconds: 120 },
+  { label: '3 min', seconds: 180 },
   { label: '5 min', seconds: 300 },
   { label: '10 min', seconds: 600 },
 ] as const;

@@ -9,3 +9,4 @@ export { ViewToggle } from './ViewToggle';
 export { SwimlaneView } from './SwimlaneView';
 export { ListView } from './ListView';
 export { TimelineView } from './TimelineView';
+export { ParticipantPopover } from './ParticipantPopover';

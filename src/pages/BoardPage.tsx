@@ -11,7 +11,7 @@ import {
 import { Link2, Check } from 'lucide-react';
 import { AppShell } from '@/components/Layout';
 import { Button, Input, Modal } from '@/components/common';
-import { BoardColumn, FacilitatorToolbar, VoteStatus, ViewToggle, SwimlaneView, ListView, TimelineView } from '@/components/Board';
+import { BoardColumn, FacilitatorToolbar, VoteStatus, ViewToggle, SwimlaneView, ListView, TimelineView, ParticipantPopover } from '@/components/Board';
 import type { BoardView } from '@/types';
 import { useBoardStore } from '@/stores/boardStore';
 import { useTimer } from '@/hooks/useTimer';
@@ -46,6 +46,9 @@ export function BoardPage() {
     updateActionItem,
     deleteActionItem,
     completeBoard,
+    onlineParticipantIds,
+    updateParticipant,
+    removeParticipant,
   } = useBoardStore();
 
   const [participantName, setParticipantName] = useState('');
@@ -221,7 +224,7 @@ export function BoardPage() {
         isAdmin && !isCompleted ? (
           <FacilitatorToolbar
             settings={board.settings}
-            participantCount={participants.length}
+
             timer={timer}
             onUpdateSettings={updateSettings}
             onTimerStart={timerStart}
@@ -254,6 +257,16 @@ export function BoardPage() {
               )}
             </div>
             <div className="flex items-center gap-3">
+              <ParticipantPopover
+                participants={participants}
+                onlineParticipantIds={onlineParticipantIds}
+                currentParticipantId={currentParticipantId}
+                isAdmin={isAdmin}
+                boardCreatorId={board.created_by}
+                onPromote={(id) => updateParticipant(id, { is_admin: true })}
+                onDemote={(id) => updateParticipant(id, { is_admin: false })}
+                onRemove={(id) => removeParticipant(id)}
+              />
               <button
                 onClick={handleCopyLink}
                 className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] px-3 py-1.5 text-sm text-[var(--color-gray-6)] transition-colors hover:border-[var(--color-gray-3)] hover:text-[var(--color-gray-8)]"

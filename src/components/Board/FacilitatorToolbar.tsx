@@ -1,11 +1,11 @@
-import { Eye, EyeOff, Lock, Unlock, Vote, Users, ClipboardList, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Lock, Unlock, Vote, ClipboardList, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { TimerControls } from '@/components/Timer';
 import type { BoardSettings, TimerState } from '@/types';
 
 interface FacilitatorToolbarProps {
   settings: BoardSettings;
-  participantCount: number;
+
   timer: TimerState;
   onUpdateSettings: (settings: Partial<BoardSettings>) => void;
   onTimerStart: (duration: number) => void;
@@ -20,7 +20,7 @@ interface FacilitatorToolbarProps {
 
 export function FacilitatorToolbar({
   settings,
-  participantCount,
+
   timer,
   onUpdateSettings,
   onTimerStart,
@@ -103,11 +103,6 @@ export function FacilitatorToolbar({
         </>
       )}
 
-      {/* Participant count */}
-      <div className="flex items-center gap-1.5 rounded-[var(--radius-md)] px-2.5 py-1.5 text-sm text-[var(--color-gray-5)]">
-        <Users size={14} />
-        <span>{participantCount}</span>
-      </div>
     </div>
   );
 }

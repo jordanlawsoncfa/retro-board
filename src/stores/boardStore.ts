@@ -33,7 +33,7 @@ interface BoardState {
 
   // Cards
   addCard: (columnId: string, text: string) => Promise<void>;
-  updateCard: (cardId: string, text: string) => Promise<void>;
+  updateCard: (cardId: string, updates: Partial<Pick<Card, 'text' | 'color'>>) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   moveCard: (cardId: string, targetColumnId: string, newPosition: number) => Promise<void>;
 
@@ -276,13 +276,13 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }));
   },
 
-  updateCard: async (cardId, text) => {
-    const { error } = await supabase.from('cards').update({ text }).eq('id', cardId);
+  updateCard: async (cardId, updates) => {
+    const { error } = await supabase.from('cards').update(updates).eq('id', cardId);
     if (error) throw error;
 
     set((state) => ({
       cards: state.cards.map((c) =>
-        c.id === cardId ? { ...c, text, updated_at: new Date().toISOString() } : c
+        c.id === cardId ? { ...c, ...updates, updated_at: new Date().toISOString() } : c
       ),
     }));
   },

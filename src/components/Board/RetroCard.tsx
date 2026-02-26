@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pencil, Trash2, ThumbsUp, Check, X } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { CardColorPicker } from './CardColorPicker';
 
 interface RetroCardProps {
   id: string;
@@ -15,7 +16,7 @@ interface RetroCardProps {
   votingEnabled: boolean;
   secretVoting: boolean;
   voteLimitReached: boolean;
-  onUpdate: (cardId: string, text: string) => void;
+  onUpdate: (cardId: string, updates: Partial<{ text: string; color: string | null }>) => void;
   onDelete: (cardId: string) => void;
   onToggleVote: (cardId: string) => void;
   isCompleted?: boolean;
@@ -44,7 +45,7 @@ export function RetroCard({
   const handleSave = () => {
     const trimmed = editText.trim();
     if (trimmed && trimmed !== text) {
-      onUpdate(id, trimmed);
+      onUpdate(id, { text: trimmed });
     }
     setIsEditing(false);
   };
@@ -141,6 +142,10 @@ export function RetroCard({
               {/* Author actions (visible on hover) */}
               {isAuthor && !isCompleted && (
                 <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                  <CardColorPicker
+                    currentColor={color}
+                    onSelectColor={(newColor) => onUpdate(id, { color: newColor })}
+                  />
                   <button
                     onClick={() => {
                       setEditText(text);

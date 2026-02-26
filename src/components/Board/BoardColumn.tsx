@@ -18,7 +18,7 @@ interface BoardColumnProps {
   cardCreationDisabled: boolean;
   maxVotesPerParticipant: number;
   onAddCard: (columnId: string, text: string) => void;
-  onUpdateCard: (cardId: string, text: string) => void;
+  onUpdateCard: (cardId: string, updates: Partial<{ text: string; color: string | null }>) => void;
   onDeleteCard: (cardId: string) => void;
   onToggleVote: (cardId: string) => void;
   isCompleted?: boolean;

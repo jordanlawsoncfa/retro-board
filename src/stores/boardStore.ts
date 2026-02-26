@@ -323,12 +323,11 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       if (error) throw error;
       set((state) => ({ votes: state.votes.filter((v) => v.id !== existingVote.id) }));
     } else {
-      const myVotes = votes.filter((v) => v.voter_id === currentParticipantId);
-      if (myVotes.length >= board.settings.max_votes_per_participant) return;
+      // Check global vote limit
+      const myVoteCount = votes.filter((v) => v.voter_id === currentParticipantId).length;
+      if (myVoteCount >= board.settings.max_votes_per_participant) return;
 
-      const myVotesOnCard = myVotes.filter((v) => v.card_id === cardId);
-      if (myVotesOnCard.length >= board.settings.max_votes_per_card) return;
-
+      // Add vote (DB UNIQUE constraint enforces one-per-card)
       const newVote = {
         id: crypto.randomUUID(),
         card_id: cardId,

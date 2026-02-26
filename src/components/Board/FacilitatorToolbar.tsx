@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Lock, Unlock, Vote, Users, Share2, ClipboardList } from 'lucide-react';
+import { Eye, EyeOff, Lock, Unlock, Vote, Users, ClipboardList } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { TimerControls } from '@/components/Timer';
 import type { BoardSettings, TimerState } from '@/types';
@@ -6,7 +6,6 @@ import type { BoardSettings, TimerState } from '@/types';
 interface FacilitatorToolbarProps {
   settings: BoardSettings;
   participantCount: number;
-  boardId: string;
   timer: TimerState;
   onUpdateSettings: (settings: Partial<BoardSettings>) => void;
   onTimerStart: (duration: number) => void;
@@ -20,7 +19,6 @@ interface FacilitatorToolbarProps {
 export function FacilitatorToolbar({
   settings,
   participantCount,
-  boardId,
   timer,
   onUpdateSettings,
   onTimerStart,
@@ -33,11 +31,6 @@ export function FacilitatorToolbar({
   const isRevealed = settings.card_visibility === 'visible';
   const isLocked = settings.board_locked;
   const votingOn = settings.voting_enabled;
-
-  const handleCopyLink = async () => {
-    const url = `${window.location.origin}/board/${boardId}`;
-    await navigator.clipboard.writeText(url);
-  };
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto">
@@ -95,17 +88,11 @@ export function FacilitatorToolbar({
         onClick={onToggleActionItems}
       />
 
-      {/* Divider */}
-      <div className="mx-1 h-6 w-px bg-[var(--color-gray-2)]" />
-
       {/* Participant count */}
       <div className="flex items-center gap-1.5 rounded-[var(--radius-md)] px-2.5 py-1.5 text-sm text-[var(--color-gray-5)]">
         <Users size={14} />
         <span>{participantCount}</span>
       </div>
-
-      {/* Share link */}
-      <ToolbarButton icon={Share2} label="Copy link" onClick={handleCopyLink} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
+import { Link2, Check } from 'lucide-react';
 import { AppShell } from '@/components/Layout';
 import { Button, Input, Modal } from '@/components/common';
 import { BoardColumn, FacilitatorToolbar, VoteStatus } from '@/components/Board';
@@ -47,6 +48,7 @@ export function BoardPage() {
   const [participantName, setParticipantName] = useState('');
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showActionItems, setShowActionItems] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -152,6 +154,12 @@ export function BoardPage() {
     });
   }, [board, columns, cards, votes, actionItems]);
 
+  const handleCopyLink = useCallback(async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  }, []);
+
   if (loading) {
     return (
       <AppShell>
@@ -193,7 +201,6 @@ export function BoardPage() {
           <FacilitatorToolbar
             settings={board.settings}
             participantCount={participants.length}
-            boardId={board.id}
             timer={timer}
             onUpdateSettings={updateSettings}
             onTimerStart={timerStart}
@@ -217,6 +224,13 @@ export function BoardPage() {
               )}
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={handleCopyLink}
+                className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] px-3 py-1.5 text-sm text-[var(--color-gray-6)] transition-colors hover:border-[var(--color-gray-3)] hover:text-[var(--color-gray-8)]"
+              >
+                {linkCopied ? <Check size={14} /> : <Link2 size={14} />}
+                {linkCopied ? 'Copied!' : 'Share'}
+              </button>
               {isJoined && timer.status !== 'idle' && (
                 <TimerDisplay timer={timer} />
               )}

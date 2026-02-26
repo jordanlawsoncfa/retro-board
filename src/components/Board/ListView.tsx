@@ -10,6 +10,7 @@ interface ListViewProps {
   currentParticipantId: string | null;
   isObscured: boolean;
   votingEnabled: boolean;
+  maxVotesPerParticipant: number;
   onToggleVote: (cardId: string) => void;
 }
 
@@ -23,6 +24,7 @@ export function ListView({
   currentParticipantId,
   isObscured,
   votingEnabled,
+  maxVotesPerParticipant,
   onToggleVote,
 }: ListViewProps) {
   const [sortField, setSortField] = useState<SortField>('column');
@@ -46,8 +48,8 @@ export function ListView({
 
   const voteLimitReached = useMemo(() => {
     if (!currentParticipantId) return false;
-    return votes.filter((v) => v.voter_id === currentParticipantId).length >= 6;
-  }, [votes, currentParticipantId]);
+    return votes.filter((v) => v.voter_id === currentParticipantId).length >= maxVotesPerParticipant;
+  }, [votes, currentParticipantId, maxVotesPerParticipant]);
 
   const sortedCards = useMemo(() => {
     const sorted = [...cards];

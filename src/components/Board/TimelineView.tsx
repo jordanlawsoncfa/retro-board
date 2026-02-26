@@ -10,6 +10,7 @@ interface TimelineViewProps {
   currentParticipantId: string | null;
   isObscured: boolean;
   votingEnabled: boolean;
+  maxVotesPerParticipant: number;
   onToggleVote: (cardId: string) => void;
 }
 
@@ -25,6 +26,7 @@ export function TimelineView({
   currentParticipantId,
   isObscured,
   votingEnabled,
+  maxVotesPerParticipant,
   onToggleVote,
 }: TimelineViewProps) {
   const columnMap = useMemo(() => {
@@ -42,6 +44,11 @@ export function TimelineView({
     }
     return map;
   }, [votes]);
+
+  const voteLimitReached = useMemo(() => {
+    if (!currentParticipantId) return false;
+    return votes.filter((v) => v.voter_id === currentParticipantId).length >= maxVotesPerParticipant;
+  }, [votes, currentParticipantId, maxVotesPerParticipant]);
 
   const groups = useMemo((): TimelineGroup[] => {
     const sorted = [...cards].sort(
@@ -135,6 +142,7 @@ export function TimelineView({
                         <div className="mt-2 flex items-center">
                           <button
                             onClick={() => onToggleVote(card.id)}
+                            disabled={!hasVoted && voteLimitReached}
                             className={cn(
                               'flex items-center gap-1 rounded-[var(--radius-full)] px-2 py-0.5 text-xs transition-colors',
                               hasVoted

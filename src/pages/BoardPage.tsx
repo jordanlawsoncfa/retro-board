@@ -349,6 +349,7 @@ export function BoardPage() {
                 currentParticipantId={currentParticipantId}
                 isObscured={isObscured}
                 votingEnabled={board.settings.voting_enabled}
+                maxVotesPerParticipant={board.settings.max_votes_per_participant}
                 onToggleVote={toggleVote}
               />
             )}
@@ -361,6 +362,7 @@ export function BoardPage() {
                 currentParticipantId={currentParticipantId}
                 isObscured={isObscured}
                 votingEnabled={board.settings.voting_enabled}
+                maxVotesPerParticipant={board.settings.max_votes_per_participant}
                 onToggleVote={toggleVote}
               />
             )}

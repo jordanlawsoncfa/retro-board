@@ -113,116 +113,105 @@ export function BoardColumn({
       }`}
     >
       {/* Column header */}
-      <div className="group/header flex items-center gap-2 border-b border-[var(--color-gray-1)] px-4 py-3">
-        <div
-          className="h-3 w-3 shrink-0 rounded-full"
-          style={{ backgroundColor: column.color }}
-        />
+      <div className="flex flex-col border-b border-[var(--color-gray-1)]">
+        <div className="flex items-center gap-2 px-4 py-3">
+          <div
+            className="h-3 w-3 shrink-0 rounded-full"
+            style={{ backgroundColor: column.color }}
+          />
 
-        {isEditingTitle ? (
-          <div className="flex flex-1 items-center gap-1">
-            <input
-              ref={titleInputRef}
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              onKeyDown={handleTitleKeyDown}
-              onBlur={handleSaveTitle}
-              maxLength={40}
-              className="flex-1 rounded-[var(--radius-sm)] border border-[var(--color-gray-2)] px-2 py-1 text-base font-semibold text-[var(--color-gray-8)] focus:border-[var(--color-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--color-navy)]"
-            />
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleSaveTitle}
-              className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-success)] hover:bg-[var(--color-success)]/10"
-              aria-label="Save title"
-            >
-              <Check size={14} />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                setEditTitle(column.title);
-                setIsEditingTitle(false);
-              }}
-              className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)]"
-              aria-label="Cancel"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        ) : (
-          <>
-            <h3
-              className={cn(
-                'flex-1 text-base font-semibold text-[var(--color-gray-8)]',
-                isAdmin && !isCompleted && 'cursor-pointer hover:text-[var(--color-navy)]'
-              )}
-              onClick={() => {
-                if (isAdmin && !isCompleted) {
+          {isEditingTitle ? (
+            <div className="flex flex-1 items-center gap-1">
+              <input
+                ref={titleInputRef}
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                onKeyDown={handleTitleKeyDown}
+                onBlur={handleSaveTitle}
+                maxLength={40}
+                className="flex-1 rounded-[var(--radius-sm)] border border-[var(--color-gray-2)] px-2 py-1.5 text-base font-semibold text-[var(--color-gray-8)] focus:border-[var(--color-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--color-navy)]"
+              />
+              <button
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleSaveTitle}
+                className="rounded-[var(--radius-sm)] p-2 text-[var(--color-success)] hover:bg-[var(--color-success)]/10"
+                aria-label="Save title"
+              >
+                <Check size={16} />
+              </button>
+              <button
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
                   setEditTitle(column.title);
-                  setIsEditingTitle(true);
-                }
-              }}
-              title={isAdmin && !isCompleted ? 'Click to rename' : undefined}
-            >
+                  setIsEditingTitle(false);
+                }}
+                className="rounded-[var(--radius-sm)] p-2 text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)]"
+                aria-label="Cancel"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <h3 className="flex-1 text-base font-semibold text-[var(--color-gray-8)]">
               {column.title}
             </h3>
+          )}
 
-            {isAdmin && !isCompleted && (
-              <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover/header:opacity-100">
-                <button
-                  onClick={() => {
-                    setEditTitle(column.title);
-                    setIsEditingTitle(true);
-                  }}
-                  className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-gray-4)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-6)]"
-                  aria-label="Rename column"
-                  title="Rename column"
-                >
-                  <Pencil size={12} />
-                </button>
-                {canDeleteColumn && (
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-gray-4)] hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)]"
-                    aria-label="Delete column"
-                    title="Delete column"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                )}
-              </div>
-            )}
-          </>
-        )}
-
-        <span className="rounded-[var(--radius-full)] bg-[var(--color-gray-1)] px-2 py-0.5 text-xs font-medium text-[var(--color-gray-5)]">
-          {cards.length}
-        </span>
-        {votingEnabled && !secretVoting && columnVoteCount > 0 && (
-          <span className="flex items-center gap-1 rounded-[var(--radius-full)] bg-[var(--color-navy)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-navy)]">
-            <ThumbsUp size={10} />
-            {columnVoteCount}
+          <span className="rounded-[var(--radius-full)] bg-[var(--color-gray-1)] px-2 py-0.5 text-xs font-medium text-[var(--color-gray-5)]">
+            {cards.length}
           </span>
+          {votingEnabled && !secretVoting && columnVoteCount > 0 && (
+            <span className="flex items-center gap-1 rounded-[var(--radius-full)] bg-[var(--color-navy)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-navy)]">
+              <ThumbsUp size={10} />
+              {columnVoteCount}
+            </span>
+          )}
+        </div>
+
+        {/* Admin action bar — always visible, not hover-dependent */}
+        {isAdmin && !isCompleted && !isEditingTitle && (
+          <div className="flex items-center gap-1 border-t border-[var(--color-gray-1)] px-3 py-1.5">
+            <button
+              onClick={() => {
+                setEditTitle(column.title);
+                setIsEditingTitle(true);
+              }}
+              className="flex items-center gap-1.5 rounded-[var(--radius-md)] px-2.5 py-1.5 text-xs text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-7)] transition-colors"
+              aria-label="Rename column"
+            >
+              <Pencil size={14} />
+              <span>Rename</span>
+            </button>
+            {canDeleteColumn && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex items-center gap-1.5 rounded-[var(--radius-md)] px-2.5 py-1.5 text-xs text-[var(--color-gray-5)] hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)] transition-colors"
+                aria-label="Delete column"
+              >
+                <Trash2 size={14} />
+                <span>Delete</span>
+              </button>
+            )}
+          </div>
         )}
       </div>
 
       {/* Delete confirmation */}
       {showDeleteConfirm && (
-        <div className="flex items-center justify-between bg-[var(--color-error)]/5 px-4 py-2 text-sm">
+        <div className="flex items-center justify-between bg-[var(--color-error)]/5 px-4 py-2.5 text-sm">
           <span className="text-[var(--color-error)]">
             Delete column{cards.length > 0 ? ` and ${cards.length} card${cards.length === 1 ? '' : 's'}` : ''}?
           </span>
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             <button
               onClick={() => setShowDeleteConfirm(false)}
-              className="rounded-[var(--radius-sm)] px-2 py-1 text-xs text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)]"
+              className="rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)]"
             >
               Cancel
             </button>
             <button
               onClick={handleDeleteColumn}
-              className="rounded-[var(--radius-sm)] bg-[var(--color-error)] px-2 py-1 text-xs text-white hover:opacity-90"
+              className="rounded-[var(--radius-sm)] bg-[var(--color-error)] px-3 py-1.5 text-xs text-white hover:opacity-90"
             >
               Delete
             </button>

@@ -44,7 +44,11 @@ export const BOARD_TEMPLATES: TemplateDefinition[] = [
   {
     id: 'custom',
     name: 'Custom Board',
-    description: 'Start with a blank board and define your own columns',
-    columns: [],
+    description: 'Start with three columns you can rename and customize',
+    columns: [
+      { title: 'Column 1', color: '#004F71' },
+      { title: 'Column 2', color: '#249E6B' },
+      { title: 'Column 3', color: '#E33205' },
+    ],
   },
 ];

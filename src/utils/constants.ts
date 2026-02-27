@@ -20,6 +20,8 @@ export const TIMER_PRESETS = [
   { label: '10 min', seconds: 600 },
 ] as const;
 
+export const MAX_COLUMNS = 10;
+
 export const COLUMN_COLORS = [
   '#DD0031', '#004F71', '#3EB1C8', '#249E6B',
   '#E33205', '#FFB549', '#994878', '#5D5754',

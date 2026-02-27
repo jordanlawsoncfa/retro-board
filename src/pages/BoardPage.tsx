@@ -12,7 +12,7 @@ import {
 import { Link2, Check } from 'lucide-react';
 import { AppShell } from '@/components/Layout';
 import { Button, Input, Modal } from '@/components/common';
-import { BoardColumn, FacilitatorToolbar, VoteStatus, ViewToggle, SwimlaneView, ListView, TimelineView, ParticipantPopover, ConnectionStatusBanner } from '@/components/Board';
+import { BoardColumn, FacilitatorToolbar, VoteStatus, ViewToggle, SwimlaneView, ListView, TimelineView, ParticipantPopover, ConnectionStatusBanner, AddColumnButton } from '@/components/Board';
 import type { BoardView } from '@/types';
 import { useBoardStore } from '@/stores/boardStore';
 import { useTimer } from '@/hooks/useTimer';
@@ -50,6 +50,9 @@ export function BoardPage() {
     onlineParticipantIds,
     updateParticipant,
     removeParticipant,
+    addColumn,
+    updateColumn,
+    deleteColumn,
   } = useBoardStore();
 
   const [participantName, setParticipantName] = useState('');
@@ -314,7 +317,7 @@ export function BoardPage() {
                   <div
                     className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory sm:grid sm:overflow-x-visible sm:pb-0 sm:snap-none"
                     style={{
-                      gridTemplateColumns: `repeat(${Math.min(columns.length, 4)}, minmax(280px, 1fr))`,
+                      gridTemplateColumns: `repeat(${Math.min(columns.length + (isAdmin && !isCompleted ? 1 : 0), 4)}, minmax(280px, 1fr))`,
                     }}
                   >
                     {[...columns]
@@ -338,8 +341,18 @@ export function BoardPage() {
                           onDeleteCard={deleteCard}
                           onToggleVote={toggleVote}
                           isCompleted={isCompleted}
+                          isAdmin={isAdmin}
+                          onUpdateColumn={updateColumn}
+                          onDeleteColumn={deleteColumn}
+                          canDeleteColumn={columns.length > 1}
                         />
                       ))}
+                    {isAdmin && !isCompleted && (
+                      <AddColumnButton
+                        columnCount={columns.length}
+                        onAddColumn={addColumn}
+                      />
+                    )}
                   </div>
                 </DndContext>
               </div>
@@ -392,12 +405,21 @@ export function BoardPage() {
           </>
         ) : (
           <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
-            <div className="rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-white/50 p-12 text-center">
-              <p className="text-lg font-medium text-[var(--color-gray-5)]">No columns yet</p>
-              <p className="mt-2 text-sm text-[var(--color-gray-4)]">
-                The board admin can add columns to get started.
-              </p>
-            </div>
+            {isAdmin && !isCompleted ? (
+              <div className="flex justify-center">
+                <AddColumnButton
+                  columnCount={0}
+                  onAddColumn={addColumn}
+                />
+              </div>
+            ) : (
+              <div className="rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-white/50 p-12 text-center">
+                <p className="text-lg font-medium text-[var(--color-gray-5)]">No columns yet</p>
+                <p className="mt-2 text-sm text-[var(--color-gray-4)]">
+                  The board admin can add columns to get started.
+                </p>
+              </div>
+            )}
           </div>
         )
       ) : (

@@ -12,3 +12,4 @@ export { TimelineView } from './TimelineView';
 export { ParticipantPopover } from './ParticipantPopover';
 export { ConnectionStatusBanner } from './ConnectionStatusBanner';
 export { BoardHistorySidebar } from './BoardHistorySidebar';
+export { AddColumnButton } from './AddColumnButton';

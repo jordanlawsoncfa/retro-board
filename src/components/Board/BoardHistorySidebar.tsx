@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Trash2 } from 'lucide-react';
 import { getBoardHistory, clearBoardHistory } from '@/utils/boardHistory';
@@ -21,12 +21,8 @@ function formatRelativeDate(isoDate: string): string {
 }
 
 export function BoardHistorySidebar() {
-  const [entries, setEntries] = useState<BoardHistoryEntry[]>([]);
+  const [entries, setEntries] = useState<BoardHistoryEntry[]>(() => getBoardHistory());
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setEntries(getBoardHistory());
-  }, []);
 
   if (entries.length === 0) return null;
 

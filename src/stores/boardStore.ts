@@ -117,7 +117,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       });
       if (joinError) throw joinError;
 
-      sessionStorage.setItem(`retro-pid-${boardId}`, participantId);
+      localStorage.setItem(`retro-pid-${boardId}`, participantId);
       set((state) => ({
         currentParticipantId: participantId,
         participants: [
@@ -171,7 +171,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       supabase.from('participants').select('*').eq('board_id', boardId),
     ]);
 
-    const stored = sessionStorage.getItem(`retro-pid-${boardId}`);
+    const stored = localStorage.getItem(`retro-pid-${boardId}`);
 
     saveBoardToHistory({
       boardId,
@@ -243,7 +243,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   joinBoard: async (boardId, displayName) => {
     // Check if already joined (e.g., creator who auto-joined in createBoard)
-    const stored = sessionStorage.getItem(`retro-pid-${boardId}`);
+    const stored = localStorage.getItem(`retro-pid-${boardId}`);
     if (stored) {
       const { participants } = get();
       const existing = participants.find((p) => p.id === stored);
@@ -274,7 +274,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       await supabase.from('boards').update({ created_by: participantId }).eq('id', boardId);
     }
 
-    sessionStorage.setItem(`retro-pid-${boardId}`, participantId);
+    localStorage.setItem(`retro-pid-${boardId}`, participantId);
 
     const newParticipant: Participant = {
       id: participantId,

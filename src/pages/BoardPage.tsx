@@ -110,7 +110,7 @@ export function BoardPage() {
   // Show join modal if not already joined
   useEffect(() => {
     if (boardId && !loading && board) {
-      const stored = sessionStorage.getItem(`retro-pid-${boardId}`);
+      const stored = localStorage.getItem(`retro-pid-${boardId}`);
       if (!stored) {
         setShowJoinModal(true);
       }

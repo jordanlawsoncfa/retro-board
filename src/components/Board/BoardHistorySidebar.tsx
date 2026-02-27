@@ -76,7 +76,7 @@ export function BoardHistorySidebar() {
         <div
           role="dialog"
           aria-label="Recent retro boards"
-          className="absolute right-0 top-full mt-2 w-72 rounded-[var(--radius-lg)] border border-[var(--color-gray-2)] bg-white p-4 shadow-lg z-50"
+          className="absolute right-0 top-full mt-2 w-72 rounded-[var(--radius-lg)] border border-[var(--color-gray-2)] bg-[var(--color-surface)] p-4 shadow-lg z-50"
         >
           {/* Header */}
           <div className="flex items-center gap-2 text-[var(--color-gray-6)]">

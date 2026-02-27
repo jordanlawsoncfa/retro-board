@@ -44,7 +44,7 @@ export function AddColumnButton({ columnCount, onAddColumn }: AddColumnButtonPro
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="flex min-h-[300px] w-[85vw] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-white/50 px-6 py-8 text-[var(--color-gray-4)] transition-colors hover:border-[var(--color-gray-3)] hover:bg-white/80 hover:text-[var(--color-gray-6)] sm:w-auto sm:shrink sm:min-w-[200px]"
+        className="flex min-h-[300px] w-[85vw] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-[var(--color-surface-subtle)] px-6 py-8 text-[var(--color-gray-4)] transition-colors hover:border-[var(--color-gray-3)] hover:bg-[var(--color-surface-dim)] hover:text-[var(--color-gray-6)] sm:w-auto sm:shrink sm:min-w-[200px]"
       >
         <Plus size={24} />
         <span className="text-sm font-medium">Add Column</span>
@@ -54,7 +54,7 @@ export function AddColumnButton({ columnCount, onAddColumn }: AddColumnButtonPro
   }
 
   return (
-    <div className="flex min-h-[300px] w-[85vw] shrink-0 snap-start flex-col rounded-[var(--radius-lg)] border border-[var(--color-navy)] bg-white p-4 sm:w-auto sm:shrink sm:min-w-[200px]">
+    <div className="flex min-h-[300px] w-[85vw] shrink-0 snap-start flex-col rounded-[var(--radius-lg)] border border-[var(--color-navy)] bg-[var(--color-surface)] p-4 sm:w-auto sm:shrink sm:min-w-[200px]">
       <p className="mb-2 text-sm font-medium text-[var(--color-gray-7)]">New Column</p>
       <input
         ref={inputRef}

@@ -90,7 +90,7 @@ export function HomePage() {
                   className={`rounded-[var(--radius-md)] border-2 p-3 sm:p-4 text-left transition-all ${
                     selectedTemplate === t.id
                       ? 'border-[var(--color-navy)] bg-[var(--color-navy)]/5'
-                      : 'border-[var(--color-gray-1)] bg-white hover:border-[var(--color-gray-2)]'
+                      : 'border-[var(--color-gray-1)] bg-[var(--color-surface)] hover:border-[var(--color-gray-2)]'
                   }`}
                 >
                   <p className="font-semibold text-[var(--color-gray-8)]">{t.name}</p>

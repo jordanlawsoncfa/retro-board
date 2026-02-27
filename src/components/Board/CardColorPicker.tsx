@@ -42,7 +42,7 @@ export function CardColorPicker({ currentColor, onSelectColor, onOpenChange, ico
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-30 mt-1 flex gap-1 rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-white p-2 shadow-lg">
+        <div className="absolute right-0 top-full z-30 mt-1 flex gap-1 rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-[var(--color-surface)] p-2 shadow-lg">
           {CARD_COLORS.map((c) => (
             <button
               key={c.name}

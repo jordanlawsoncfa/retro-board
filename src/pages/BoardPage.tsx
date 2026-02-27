@@ -245,7 +245,7 @@ export function BoardPage() {
       }
     >
       {/* Board header */}
-      <div className="border-b border-[var(--color-gray-1)] bg-white px-4 py-3 sm:px-6">
+      <div className="border-b border-[var(--color-gray-1)] bg-[var(--color-surface)] px-4 py-3 sm:px-6">
         <div className="mx-auto max-w-[1400px]">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="min-w-0">
@@ -411,7 +411,7 @@ export function BoardPage() {
                 />
               </div>
             ) : (
-              <div className="rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-white/50 p-12 text-center">
+              <div className="rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-[var(--color-surface-subtle)] p-12 text-center">
                 <p className="text-lg font-medium text-[var(--color-gray-5)]">No columns yet</p>
                 <p className="mt-2 text-sm text-[var(--color-gray-4)]">
                   The board admin can add columns to get started.

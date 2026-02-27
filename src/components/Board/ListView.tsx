@@ -100,7 +100,7 @@ export function ListView({
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
-      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-gray-1)] bg-white">
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-gray-1)] bg-[var(--color-surface)]">
         <table className="w-full">
           <thead>
             <tr className="border-b border-[var(--color-gray-1)] bg-[var(--color-gray-0)]">

@@ -120,7 +120,7 @@ export function TimerControls({ timer, onStart, onPause, onResume, onReset }: Ti
           role="dialog"
           aria-label="Timer controls"
           tabIndex={-1}
-          className="absolute right-0 top-full mt-2 w-60 rounded-lg border border-[var(--color-gray-2)] bg-white p-3 shadow-lg z-50"
+          className="absolute right-0 top-full mt-2 w-60 rounded-lg border border-[var(--color-gray-2)] bg-[var(--color-surface)] p-3 shadow-lg z-50"
         >
           {isActive || isExpired ? (
             /* Active / expired state */

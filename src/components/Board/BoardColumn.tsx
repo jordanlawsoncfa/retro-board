@@ -130,7 +130,7 @@ export function BoardColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-[300px] w-[85vw] shrink-0 snap-start flex-col rounded-[var(--radius-lg)] border bg-white/80 sm:w-auto sm:shrink ${
+      className={`flex min-h-[300px] w-[85vw] shrink-0 snap-start flex-col rounded-[var(--radius-lg)] border bg-[var(--color-surface-dim)] sm:w-auto sm:shrink ${
         isOver ? 'border-[var(--color-navy)] bg-[var(--color-navy)]/5' : 'border-[var(--color-gray-1)]'
       }`}
     >
@@ -227,7 +227,7 @@ export function BoardColumn({
             {showColorPicker && (
               <div
                 ref={colorPickerRef}
-                className="absolute left-2 top-full z-30 mt-1 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] bg-white p-2 shadow-lg"
+                className="absolute left-2 top-full z-30 mt-1 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] bg-[var(--color-surface)] p-2 shadow-lg"
               >
                 <div className="grid grid-cols-6 gap-1.5">
                   {COLUMN_COLORS.map((color) => (

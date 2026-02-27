@@ -78,7 +78,7 @@ export function TimelineView({
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
       {groups.length === 0 ? (
-        <div className="rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-white/50 p-12 text-center">
+        <div className="rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-[var(--color-surface-subtle)] p-12 text-center">
           <p className="text-sm text-[var(--color-gray-4)]">No cards to display</p>
         </div>
       ) : (
@@ -89,7 +89,7 @@ export function TimelineView({
           {groups.map((group, gi) => (
             <div key={gi} className="relative mb-6 pl-8">
               {/* Timeline dot */}
-              <div className="absolute left-[-5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--color-navy)] bg-white" />
+              <div className="absolute left-[-5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--color-navy)] bg-[var(--color-surface)]" />
 
               {/* Timestamp */}
               <div className="mb-2 text-xs font-medium text-[var(--color-gray-4)]">
@@ -109,7 +109,7 @@ export function TimelineView({
                   return (
                     <div
                       key={card.id}
-                      className="rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-white p-3 shadow-sm"
+                      className="rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-[var(--color-surface)] p-3 shadow-sm"
                       style={{ backgroundColor: card.color || undefined }}
                     >
                       {/* Column tag + author */}

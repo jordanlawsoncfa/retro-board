@@ -121,6 +121,75 @@
   --shadow-md: 0 4px 12px rgba(30, 39, 47, 0.08);
   --shadow-lg: 0 12px 32px rgba(30, 39, 47, 0.12);
   --shadow-xl: 0 20px 48px rgba(30, 39, 47, 0.16);
+
+  /* --- Surface tokens (for bg-white replacements) --- */
+  --color-surface: #FFFFFF;
+  --color-surface-translucent: rgba(255, 255, 255, 0.95);
+  --color-surface-dim: rgba(255, 255, 255, 0.80);
+  --color-surface-subtle: rgba(255, 255, 255, 0.50);
+}
+
+/* ------------------------------------------------------------------ */
+/* Dark mode overrides                                                 */
+/* ------------------------------------------------------------------ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-warm-white: #111518;
+  --color-warm-gray: #2A2E31;
+
+  --color-gray-1: #1E272F;
+  --color-gray-2: #2A3540;
+  --color-gray-3: #37424A;
+  --color-gray-4: #5B6770;
+  --color-gray-5: #80878C;
+  --color-gray-6: #A9ACAF;
+  --color-gray-7: #CCCFD0;
+  --color-gray-8: #ECEDEE;
+
+  --color-text-default: #A9ACAF;
+  --color-text-disabled: #5B6770;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.5);
+
+  --color-surface: #1A2028;
+  --color-surface-translucent: rgba(26, 32, 40, 0.95);
+  --color-surface-dim: rgba(26, 32, 40, 0.80);
+  --color-surface-subtle: rgba(26, 32, 40, 0.50);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    color-scheme: dark;
+
+    --color-warm-white: #111518;
+    --color-warm-gray: #2A2E31;
+
+    --color-gray-1: #1E272F;
+    --color-gray-2: #2A3540;
+    --color-gray-3: #37424A;
+    --color-gray-4: #5B6770;
+    --color-gray-5: #80878C;
+    --color-gray-6: #A9ACAF;
+    --color-gray-7: #CCCFD0;
+    --color-gray-8: #ECEDEE;
+
+    --color-text-default: #A9ACAF;
+    --color-text-disabled: #5B6770;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.5);
+
+    --color-surface: #1A2028;
+    --color-surface-translucent: rgba(26, 32, 40, 0.95);
+    --color-surface-dim: rgba(26, 32, 40, 0.80);
+    --color-surface-subtle: rgba(26, 32, 40, 0.50);
+  }
 }
 
 
@@ -174,6 +243,12 @@
   /* Font families */
   --font-primary: 'Apercu Std', 'Inter', system-ui, -apple-system, sans-serif;
   --font-secondary: 'Rooney', 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Surfaces */
+  --color-surface: var(--color-surface);
+  --color-surface-translucent: var(--color-surface-translucent);
+  --color-surface-dim: var(--color-surface-dim);
+  --color-surface-subtle: var(--color-surface-subtle);
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(30, 39, 47, 0.06);

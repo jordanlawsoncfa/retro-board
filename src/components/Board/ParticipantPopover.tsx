@@ -60,7 +60,7 @@ export function ParticipantPopover({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-[var(--color-gray-2)] z-50 w-72 max-h-80 overflow-y-auto">
+        <div className="absolute right-0 top-full mt-2 bg-[var(--color-surface)] rounded-lg shadow-lg border border-[var(--color-gray-2)] z-50 w-72 max-h-80 overflow-y-auto">
           <div className="p-3 border-b border-[var(--color-gray-1)]">
             <p className="text-xs font-semibold text-[var(--color-gray-6)]">
               Participants ({participants.length})

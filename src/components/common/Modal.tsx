@@ -50,7 +50,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
       <div className="absolute inset-0 bg-[var(--color-gray-8)]/50" />
       <div
         className={cn(
-          'relative flex w-full flex-col bg-white shadow-xl',
+          'relative flex w-full flex-col bg-[var(--color-surface)] shadow-xl',
           'max-h-[90vh] sm:max-h-[85vh]',
           'rounded-t-[var(--radius-lg)] sm:rounded-[var(--radius-lg)]',
           sizeStyles[size]

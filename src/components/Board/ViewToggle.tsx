@@ -16,7 +16,7 @@ const views: { id: BoardView; icon: React.ComponentType<{ size?: number }>; labe
 
 export function ViewToggle({ currentView, onChangeView }: ViewToggleProps) {
   return (
-    <div className="inline-flex rounded-[var(--radius-md)] border border-[var(--color-gray-2)] bg-white p-0.5">
+    <div className="inline-flex rounded-[var(--radius-md)] border border-[var(--color-gray-2)] bg-[var(--color-surface)] p-0.5">
       {views.map(({ id, icon: Icon, label }) => (
         <button
           key={id}

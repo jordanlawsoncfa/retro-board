@@ -66,7 +66,7 @@ export function AddCardForm({ onSubmit, disabled }: AddCardFormProps) {
         rows={3}
         className={cn(
           'w-full resize-none rounded-[var(--radius-md)] border border-[var(--color-gray-2)]',
-          'bg-white px-3 py-2 text-base text-[var(--color-gray-8)]',
+          'bg-[var(--color-surface)] px-3 py-2 text-base text-[var(--color-gray-8)]',
           'placeholder:text-[var(--color-gray-3)]',
           'focus:border-[var(--color-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--color-navy)] focus:ring-offset-1'
         )}

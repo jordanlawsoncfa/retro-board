@@ -72,7 +72,7 @@ export function SwimlaneView({
           return (
             <div
               key={col.id}
-              className="rounded-[var(--radius-lg)] border border-[var(--color-gray-1)] bg-white/80"
+              className="rounded-[var(--radius-lg)] border border-[var(--color-gray-1)] bg-[var(--color-surface-dim)]"
             >
               {/* Column swimlane header */}
               <button
@@ -145,7 +145,7 @@ export function SwimlaneView({
         })}
 
         {sortedColumns.length === 0 && (
-          <div className="rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-white/50 p-12 text-center">
+          <div className="rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-gray-2)] bg-[var(--color-surface-subtle)] p-12 text-center">
             <p className="text-sm text-[var(--color-gray-4)]">No columns to display</p>
           </div>
         )}

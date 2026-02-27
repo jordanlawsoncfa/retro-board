@@ -36,7 +36,7 @@ export function ActionItemRow({ item, participants, onUpdate, onDelete, readOnly
 
   return (
     <div className={cn(
-      'group flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-white p-3',
+      'group flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-[var(--color-surface)] p-3',
       item.status === 'done' && 'opacity-60'
     )}>
       {/* Status toggle */}

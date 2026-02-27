@@ -67,7 +67,7 @@ export function RetroCard({
   return (
     <div
       className={cn(
-        'group relative rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-white p-3 shadow-sm',
+        'group relative rounded-[var(--radius-md)] border border-[var(--color-gray-1)] bg-[var(--color-surface)] p-3 shadow-sm',
         'transition-[filter] duration-400 ease-out',
         isObscured && !isAuthor && 'select-none',
         colorPickerOpen && 'z-20'
@@ -87,7 +87,7 @@ export function RetroCard({
             autoFocus
             className={cn(
               'w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-gray-2)]',
-              'bg-white px-2 py-1.5 text-base text-[var(--color-gray-8)]',
+              'bg-[var(--color-surface)] px-2 py-1.5 text-base text-[var(--color-gray-8)]',
               'focus:border-[var(--color-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--color-navy)]'
             )}
           />

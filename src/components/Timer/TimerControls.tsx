@@ -24,6 +24,7 @@ export function TimerControls({ timer, onStart, onPause, onResume, onReset }: Ti
   const popoverRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const hasBeenOpen = useRef(false);
 
   const isRunning = timer.status === 'running';
   const isPaused = timer.status === 'paused';
@@ -55,21 +56,16 @@ export function TimerControls({ timer, onStart, onPause, onResume, onReset }: Ti
   // Focus management: move focus into popover on open, return to trigger on close
   useEffect(() => {
     if (open) {
-      // Focus the first focusable element inside the popover, or the popover itself
+      hasBeenOpen.current = true;
       requestAnimationFrame(() => {
         const dialog = dialogRef.current;
         if (!dialog) return;
         const focusable = dialog.querySelector<HTMLElement>(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
-        if (focusable) {
-          focusable.focus();
-        } else {
-          dialog.focus();
-        }
+        (focusable ?? dialog)?.focus();
       });
-    } else {
-      // Return focus to the trigger button when popover closes
+    } else if (hasBeenOpen.current) {
       triggerRef.current?.focus();
     }
   }, [open]);

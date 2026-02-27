@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutGrid, Clock, Users, Eye } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { AppShell } from '@/components/Layout';
 import { Button, Input, Textarea, Modal } from '@/components/common';
+import { BoardHistorySidebar } from '@/components/Board';
 import { BOARD_TEMPLATES, APP_NAME } from '@/utils';
 import { useBoardStore } from '@/stores/boardStore';
 import type { BoardTemplate } from '@/types';
@@ -29,48 +30,32 @@ export function HomePage() {
     }
   };
 
-  const features = [
-    { icon: LayoutGrid, title: 'Flexible Templates', desc: 'Start with a pre-built template or create your own custom columns' },
-    { icon: Eye, title: 'Card Obfuscation', desc: 'Hide cards while writing, then reveal them all at once for unbiased feedback' },
-    { icon: Clock, title: 'Synced Timer', desc: 'Real-time countdown timer visible to all participants with audio alerts' },
-    { icon: Users, title: 'No Account Needed', desc: 'Participants join via shared link — just enter a display name' },
-  ];
-
   return (
     <AppShell>
-      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
-        {/* Hero */}
-        <div className="text-center">
-          <h1 className="text-[var(--color-gray-8)]">
-            Run better retros with{' '}
-            <span className="text-[var(--color-primary)]">{APP_NAME}</span>
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--color-gray-5)]">
-            A real-time retrospective board for teams. Create columns, add cards,
-            vote, and turn insights into action items — all in one place.
-          </p>
-          <div className="mt-8">
-            <Button size="lg" onClick={() => setShowCreateModal(true)}>
-              <Plus size={20} />
-              Create a Retro Board
-            </Button>
-          </div>
-        </div>
-
-        {/* Features */}
-        <div className="mt-20 grid gap-8 sm:grid-cols-2">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-[var(--radius-lg)] border border-[var(--color-gray-1)] bg-white p-6 shadow-sm"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-navy)]/10">
-                <f.icon size={20} className="text-[var(--color-navy)]" />
-              </div>
-              <h3 className="mt-4 text-lg font-bold text-[var(--color-gray-8)]">{f.title}</h3>
-              <p className="mt-2 text-[var(--color-gray-5)]">{f.desc}</p>
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 sm:px-6">
+        <div className="flex items-center gap-12">
+          {/* Hero */}
+          <div className="text-center">
+            <h1 className="text-[var(--color-gray-8)]">
+              Run better retros with{' '}
+              <span className="text-[var(--color-primary)]">{APP_NAME}</span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--color-gray-5)]">
+              A real-time retrospective board for teams. Create columns, add cards,
+              vote, and turn insights into action items — all in one place.
+            </p>
+            <div className="mt-8">
+              <Button size="lg" onClick={() => setShowCreateModal(true)}>
+                <Plus size={20} />
+                Create a Retro Board
+              </Button>
             </div>
-          ))}
+          </div>
+
+          {/* History sidebar */}
+          <div className="hidden lg:block">
+            <BoardHistorySidebar />
+          </div>
         </div>
       </div>
 

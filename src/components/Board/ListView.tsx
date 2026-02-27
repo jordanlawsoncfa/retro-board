@@ -52,7 +52,7 @@ export function ListView({
   }, [votes, currentParticipantId, maxVotesPerParticipant]);
 
   const sortedCards = useMemo(() => {
-    const sorted = [...cards];
+    const sorted = [...cards].filter((c) => !c.merged_with);
     sorted.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {

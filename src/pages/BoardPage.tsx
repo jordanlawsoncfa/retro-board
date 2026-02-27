@@ -53,6 +53,8 @@ export function BoardPage() {
     addColumn,
     updateColumn,
     deleteColumn,
+    combineCards,
+    uncombineCard,
   } = useBoardStore();
 
   const [participantName, setParticipantName] = useState('');
@@ -340,8 +342,11 @@ export function BoardPage() {
                           onUpdateCard={updateCard}
                           onDeleteCard={deleteCard}
                           onToggleVote={toggleVote}
+                          onCombineCards={combineCards}
+                          onUncombineCard={uncombineCard}
                           isCompleted={isCompleted}
                           isAdmin={isAdmin}
+                          boardLocked={board.settings.board_locked}
                           onUpdateColumn={updateColumn}
                           onDeleteColumn={deleteColumn}
                           canDeleteColumn={columns.length > 1}

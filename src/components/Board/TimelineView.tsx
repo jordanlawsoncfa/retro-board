@@ -51,7 +51,7 @@ export function TimelineView({
   }, [votes, currentParticipantId, maxVotesPerParticipant]);
 
   const groups = useMemo((): TimelineGroup[] => {
-    const sorted = [...cards].sort(
+    const sorted = [...cards].filter((c) => !c.merged_with).sort(
       (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
 

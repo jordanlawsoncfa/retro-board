@@ -62,7 +62,7 @@ export function SwimlaneView({
       <div className="flex flex-col gap-3">
         {sortedColumns.map((col) => {
           const colCards = cards
-            .filter((c) => c.column_id === col.id)
+            .filter((c) => c.column_id === col.id && !c.merged_with)
             .sort((a, b) => a.position - b.position);
           const isCollapsed = collapsedRows.has(col.id);
           const colVoteCount = votes.filter((v) =>

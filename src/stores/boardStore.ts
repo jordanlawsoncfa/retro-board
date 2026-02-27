@@ -40,6 +40,8 @@ interface BoardState {
   updateCard: (cardId: string, updates: Partial<Pick<Card, 'text' | 'color'>>) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   moveCard: (cardId: string, targetColumnId: string, newPosition: number) => Promise<void>;
+  combineCards: (parentCardId: string, childCardId: string) => Promise<void>;
+  uncombineCard: (childCardId: string) => Promise<void>;
 
   // Voting
   toggleVote: (cardId: string) => Promise<void>;
@@ -411,9 +413,12 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     const card = cards.find((c) => c.id === cardId);
     if (!card) return;
 
+    // Find children that should move with parent
+    const childIds = cards.filter((c) => c.merged_with === cardId).map((c) => c.id);
+
     // Optimistic update
     set((state) => {
-      const otherCards = state.cards.filter((c) => c.id !== cardId);
+      const otherCards = state.cards.filter((c) => c.id !== cardId && !childIds.includes(c.id));
       const movedCard = { ...card, column_id: targetColumnId, position: newPosition };
 
       const targetCards = otherCards
@@ -423,10 +428,16 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       targetCards.splice(newPosition, 0, movedCard);
       const reindexed = targetCards.map((c, i) => ({ ...c, position: i }));
 
+      // Move children to same column
+      const movedChildren = state.cards
+        .filter((c) => childIds.includes(c.id))
+        .map((c) => ({ ...c, column_id: targetColumnId }));
+
       return {
         cards: [
           ...otherCards.filter((c) => c.column_id !== targetColumnId),
           ...reindexed,
+          ...movedChildren,
         ],
       };
     });
@@ -439,13 +450,95 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     if (error) {
       // Revert on failure
       set((state) => ({
+        cards: state.cards.map((c) => {
+          if (c.id === cardId) return { ...c, column_id: card.column_id, position: card.position };
+          if (childIds.includes(c.id)) return { ...c, column_id: card.column_id };
+          return c;
+        }),
+      }));
+      throw error;
+    }
+
+    // Move children in DB too
+    if (childIds.length > 0) {
+      await supabase
+        .from('cards')
+        .update({ column_id: targetColumnId })
+        .in('id', childIds);
+    }
+  },
+
+  combineCards: async (parentCardId, childCardId) => {
+    const { cards } = get();
+    const child = cards.find((c) => c.id === childCardId);
+    const parent = cards.find((c) => c.id === parentCardId);
+    if (!child || !parent) return;
+
+    // Re-parent any existing children of the child card to the new parent
+    const grandchildren = cards.filter((c) => c.merged_with === childCardId);
+
+    // Optimistic update
+    set((state) => ({
+      cards: state.cards.map((c) => {
+        if (c.id === childCardId) return { ...c, merged_with: parentCardId, column_id: parent.column_id };
+        if (c.merged_with === childCardId) return { ...c, merged_with: parentCardId, column_id: parent.column_id };
+        return c;
+      }),
+    }));
+
+    // Persist child
+    const { error } = await supabase
+      .from('cards')
+      .update({ merged_with: parentCardId, column_id: parent.column_id })
+      .eq('id', childCardId);
+
+    if (error) {
+      // Revert
+      set((state) => ({
         cards: state.cards.map((c) =>
-          c.id === cardId ? { ...c, column_id: card.column_id, position: card.position } : c
+          c.id === childCardId ? { ...c, merged_with: child.merged_with, column_id: child.column_id } : c
         ),
       }));
       throw error;
     }
 
+    // Re-parent grandchildren
+    if (grandchildren.length > 0) {
+      const gcIds = grandchildren.map((c) => c.id);
+      await supabase
+        .from('cards')
+        .update({ merged_with: parentCardId, column_id: parent.column_id })
+        .in('id', gcIds);
+    }
+  },
+
+  uncombineCard: async (childCardId) => {
+    const { cards } = get();
+    const child = cards.find((c) => c.id === childCardId);
+    if (!child || !child.merged_with) return;
+
+    const prevMergedWith = child.merged_with;
+
+    // Optimistic update
+    set((state) => ({
+      cards: state.cards.map((c) =>
+        c.id === childCardId ? { ...c, merged_with: null } : c
+      ),
+    }));
+
+    const { error } = await supabase
+      .from('cards')
+      .update({ merged_with: null })
+      .eq('id', childCardId);
+
+    if (error) {
+      set((state) => ({
+        cards: state.cards.map((c) =>
+          c.id === childCardId ? { ...c, merged_with: prevMergedWith } : c
+        ),
+      }));
+      throw error;
+    }
   },
 
   // --- Voting ---

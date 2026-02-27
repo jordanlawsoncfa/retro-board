@@ -23,8 +23,11 @@ interface BoardColumnProps {
   onUpdateCard: (cardId: string, updates: Partial<{ text: string; color: string | null }>) => void;
   onDeleteCard: (cardId: string) => void;
   onToggleVote: (cardId: string) => void;
+  onCombineCards: (parentCardId: string, childCardId: string) => void;
+  onUncombineCard: (childCardId: string) => void;
   isCompleted?: boolean;
   isAdmin?: boolean;
+  boardLocked?: boolean;
   onUpdateColumn?: (columnId: string, updates: Partial<Pick<Column, 'title' | 'color' | 'description'>>) => void;
   onDeleteColumn?: (columnId: string) => void;
   canDeleteColumn?: boolean;
@@ -44,8 +47,11 @@ export function BoardColumn({
   onUpdateCard,
   onDeleteCard,
   onToggleVote,
+  onCombineCards,
+  onUncombineCard,
   isCompleted,
   isAdmin,
+  boardLocked,
   onUpdateColumn,
   onDeleteColumn,
   canDeleteColumn,
@@ -56,6 +62,7 @@ export function BoardColumn({
   const [editTitle, setEditTitle] = useState(column.title);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [mergeSourceId, setMergeSourceId] = useState<string | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
 
@@ -109,10 +116,50 @@ export function BoardColumn({
     setShowDeleteConfirm(false);
   };
 
-  const sortedCards = useMemo(
-    () => [...cards].sort((a, b) => a.position - b.position),
+  // Separate root cards from children
+  const rootCards = useMemo(
+    () => cards.filter((c) => !c.merged_with),
     [cards]
   );
+
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, Card[]>();
+    for (const card of cards) {
+      if (card.merged_with) {
+        const list = map.get(card.merged_with) || [];
+        list.push(card);
+        map.set(card.merged_with, list);
+      }
+    }
+    return map;
+  }, [cards]);
+
+  // Vote counts per card for sorting
+  const voteCountByCard = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const v of votes) {
+      map.set(v.card_id, (map.get(v.card_id) || 0) + 1);
+    }
+    return map;
+  }, [votes]);
+
+  // Sort root cards: group votes desc → group size desc → position asc
+  const sortedCards = useMemo(() => {
+    return [...rootCards].sort((a, b) => {
+      const aChildren = childrenByParent.get(a.id) || [];
+      const bChildren = childrenByParent.get(b.id) || [];
+      // Group vote count = parent votes + children votes
+      const aVotes = (voteCountByCard.get(a.id) || 0) + aChildren.reduce((s, c) => s + (voteCountByCard.get(c.id) || 0), 0);
+      const bVotes = (voteCountByCard.get(b.id) || 0) + bChildren.reduce((s, c) => s + (voteCountByCard.get(c.id) || 0), 0);
+      if (bVotes !== aVotes) return bVotes - aVotes;
+      // Group size desc
+      const aSize = 1 + aChildren.length;
+      const bSize = 1 + bChildren.length;
+      if (bSize !== aSize) return bSize - aSize;
+      // Position tiebreaker
+      return a.position - b.position;
+    });
+  }, [rootCards, childrenByParent, voteCountByCard]);
 
   const cardIds = useMemo(() => sortedCards.map((c) => c.id), [sortedCards]);
 
@@ -126,6 +173,15 @@ export function BoardColumn({
     const myVoteCount = votes.filter((v) => v.voter_id === currentParticipantId).length;
     return myVoteCount >= maxVotesPerParticipant;
   }, [votes, currentParticipantId, maxVotesPerParticipant]);
+
+  const canMerge = !isCompleted && !boardLocked;
+
+  const handleMergeTarget = (targetCardId: string) => {
+    if (mergeSourceId && mergeSourceId !== targetCardId) {
+      onCombineCards(targetCardId, mergeSourceId);
+      setMergeSourceId(null);
+    }
+  };
 
   return (
     <div
@@ -281,11 +337,28 @@ export function BoardColumn({
         </p>
       )}
 
+      {/* Merge mode cancel overlay */}
+      {mergeSourceId && (
+        <div className="flex items-center justify-between bg-[var(--color-navy)]/5 px-4 py-2 text-sm">
+          <span className="text-[var(--color-navy)] font-medium">Select a card to merge into</span>
+          <button
+            onClick={() => setMergeSourceId(null)}
+            className="rounded-[var(--radius-sm)] px-3 py-1 text-xs text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)]"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
       {/* Cards */}
       <div className="flex flex-1 flex-col gap-2 p-3">
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           {sortedCards.map((card) => {
+            const children = childrenByParent.get(card.id) || [];
             const cardVotes = votes.filter((v) => v.card_id === card.id);
+            const childVotes = children.reduce(
+              (sum, c) => sum + (voteCountByCard.get(c.id) || 0), 0
+            );
             const hasVoted = cardVotes.some((v) => v.voter_id === currentParticipantId);
 
             return (
@@ -296,7 +369,7 @@ export function BoardColumn({
                   authorName={card.author_name}
                   authorId={card.author_id}
                   color={card.color}
-                  voteCount={cardVotes.length}
+                  voteCount={cardVotes.length + childVotes}
                   hasVoted={hasVoted}
                   isAuthor={card.author_id === currentParticipantId}
                   isObscured={isObscured}
@@ -307,6 +380,16 @@ export function BoardColumn({
                   onDelete={onDeleteCard}
                   onToggleVote={onToggleVote}
                   isCompleted={isCompleted}
+                  childCards={children}
+                  votes={votes}
+                  currentParticipantId={currentParticipantId}
+                  canMerge={canMerge}
+                  isMergeSource={mergeSourceId === card.id}
+                  isMergeTarget={mergeSourceId !== null && mergeSourceId !== card.id}
+                  onStartMerge={() => setMergeSourceId(card.id)}
+                  onAcceptMerge={() => handleMergeTarget(card.id)}
+                  onCancelMerge={() => setMergeSourceId(null)}
+                  onUncombineCard={onUncombineCard}
                 />
               </SortableCard>
             );

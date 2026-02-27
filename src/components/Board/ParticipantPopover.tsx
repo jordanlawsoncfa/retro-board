@@ -52,7 +52,7 @@ export function ParticipantPopover({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2 py-1 text-xs text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)] rounded-md transition-colors"
+        className="flex items-center gap-1.5 px-2.5 py-2 text-xs text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)] rounded-md transition-colors"
         title="View participants"
       >
         <Users size={14} />
@@ -99,26 +99,26 @@ export function ParticipantPopover({
                       {p.is_admin ? (
                         <button
                           onClick={() => onDemote(p.id)}
-                          className="p-1 text-[var(--color-gray-3)] hover:text-[var(--color-gray-6)] rounded"
+                          className="p-2 text-[var(--color-gray-3)] hover:text-[var(--color-gray-6)] rounded"
                           title="Demote to participant"
                         >
-                          <ShieldOff size={14} />
+                          <ShieldOff size={16} />
                         </button>
                       ) : (
                         <button
                           onClick={() => onPromote(p.id)}
-                          className="p-1 text-[var(--color-gray-3)] hover:text-[var(--color-navy)] rounded"
+                          className="p-2 text-[var(--color-gray-3)] hover:text-[var(--color-navy)] rounded"
                           title="Promote to facilitator"
                         >
-                          <Shield size={14} />
+                          <Shield size={16} />
                         </button>
                       )}
                       <button
                         onClick={() => onRemove(p.id)}
-                        className="p-1 text-[var(--color-gray-3)] hover:text-red-500 rounded"
+                        className="p-2 text-[var(--color-gray-3)] hover:text-red-500 rounded"
                         title="Remove participant"
                       >
-                        <UserMinus size={14} />
+                        <UserMinus size={16} />
                       </button>
                     </div>
                   )}

@@ -84,7 +84,7 @@ export function ActionItemsPanel({
               onChange={(e) => setNewDescription(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
               placeholder="Add an action item..."
-              className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] px-3 py-2 text-sm focus:border-[var(--color-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--color-navy)]"
+              className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] px-3 py-2 text-base focus:border-[var(--color-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--color-navy)]"
             />
             <button
               onClick={handleAdd}

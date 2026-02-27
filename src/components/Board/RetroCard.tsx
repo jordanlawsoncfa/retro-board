@@ -87,7 +87,7 @@ export function RetroCard({
             autoFocus
             className={cn(
               'w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-gray-2)]',
-              'bg-white px-2 py-1.5 text-sm text-[var(--color-gray-8)]',
+              'bg-white px-2 py-1.5 text-base text-[var(--color-gray-8)]',
               'focus:border-[var(--color-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--color-navy)]'
             )}
           />
@@ -97,17 +97,17 @@ export function RetroCard({
                 setEditText(text);
                 setIsEditing(false);
               }}
-              className="rounded-[var(--radius-sm)] p-1 text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)]"
+              className="rounded-[var(--radius-sm)] p-2 text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)]"
               aria-label="Cancel edit"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
             <button
               onClick={handleSave}
-              className="rounded-[var(--radius-sm)] p-1 text-[var(--color-success)] hover:bg-[var(--color-success)]/10"
+              className="rounded-[var(--radius-sm)] p-2 text-[var(--color-success)] hover:bg-[var(--color-success)]/10"
               aria-label="Save edit"
             >
-              <Check size={14} />
+              <Check size={16} />
             </button>
           </div>
         </div>
@@ -145,7 +145,7 @@ export function RetroCard({
 
               {/* Author actions (visible on hover) */}
               {isAuthor && !isCompleted && (
-                <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
                   <CardColorPicker
                     currentColor={color}
                     onSelectColor={(newColor) => onUpdate(id, { color: newColor })}
@@ -158,17 +158,17 @@ export function RetroCard({
                       setEditText(text);
                       setIsEditing(true);
                     }}
-                    className={cn('rounded-[var(--radius-sm)] p-1', contrast.icon, 'hover:bg-[var(--color-gray-1)]', contrast.iconHover)}
+                    className={cn('rounded-[var(--radius-sm)] p-2', contrast.icon, 'hover:bg-[var(--color-gray-1)]', contrast.iconHover)}
                     aria-label="Edit card"
                   >
-                    <Pencil size={12} />
+                    <Pencil size={14} />
                   </button>
                   <button
                     onClick={() => onDelete(id)}
-                    className={cn('rounded-[var(--radius-sm)] p-1', contrast.icon, 'hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)]')}
+                    className={cn('rounded-[var(--radius-sm)] p-2', contrast.icon, 'hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)]')}
                     aria-label="Delete card"
                   >
-                    <Trash2 size={12} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               )}

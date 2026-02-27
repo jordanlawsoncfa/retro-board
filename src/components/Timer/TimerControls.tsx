@@ -213,7 +213,7 @@ export function TimerControls({ timer, onStart, onPause, onResume, onReset }: Ti
                     onChange={(e) => setCustomMinutes(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleStartCustom()}
                     placeholder="Minutes"
-                    className="flex-1 rounded-md border border-[var(--color-gray-2)] px-2 py-1 text-xs focus:border-[var(--color-navy)] focus:outline-none"
+                    className="flex-1 rounded-md border border-[var(--color-gray-2)] px-2 py-1.5 text-base sm:text-xs focus:border-[var(--color-navy)] focus:outline-none"
                   />
                   <button
                     onClick={handleStartCustom}

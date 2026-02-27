@@ -66,13 +66,13 @@ export function AddCardForm({ onSubmit, disabled }: AddCardFormProps) {
         rows={3}
         className={cn(
           'w-full resize-none rounded-[var(--radius-md)] border border-[var(--color-gray-2)]',
-          'bg-white px-3 py-2 text-sm text-[var(--color-gray-8)]',
+          'bg-white px-3 py-2 text-base text-[var(--color-gray-8)]',
           'placeholder:text-[var(--color-gray-3)]',
           'focus:border-[var(--color-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--color-navy)] focus:ring-offset-1'
         )}
       />
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-[var(--color-gray-4)]">
+      <div className="flex items-center justify-end sm:justify-between">
+        <p className="hidden text-xs text-[var(--color-gray-4)] sm:block">
           Enter to submit, Shift+Enter for new line
         </p>
         <div className="flex gap-2">
@@ -81,7 +81,7 @@ export function AddCardForm({ onSubmit, disabled }: AddCardFormProps) {
               setIsOpen(false);
               setText('');
             }}
-            className="rounded-[var(--radius-md)] px-3 py-1 text-sm text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)]"
+            className="rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)]"
           >
             Cancel
           </button>
@@ -89,7 +89,7 @@ export function AddCardForm({ onSubmit, disabled }: AddCardFormProps) {
             onClick={handleSubmit}
             disabled={!text.trim()}
             className={cn(
-              'rounded-[var(--radius-md)] px-3 py-1 text-sm font-medium text-white',
+              'rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium text-white',
               'bg-[var(--color-navy)] hover:bg-[var(--color-navy-hover)]',
               'disabled:opacity-50 disabled:cursor-not-allowed'
             )}

@@ -63,7 +63,7 @@ export function BoardColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-[300px] flex-col rounded-[var(--radius-lg)] border bg-white/80 ${
+      className={`flex min-h-[300px] w-[85vw] shrink-0 snap-start flex-col rounded-[var(--radius-lg)] border bg-white/80 sm:w-auto sm:shrink ${
         isOver ? 'border-[var(--color-navy)] bg-[var(--color-navy)]/5' : 'border-[var(--color-gray-1)]'
       }`}
     >

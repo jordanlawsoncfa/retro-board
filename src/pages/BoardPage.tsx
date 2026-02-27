@@ -4,6 +4,7 @@ import {
   DndContext,
   closestCorners,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -58,7 +59,8 @@ export function BoardPage() {
   const [linkCopied, setLinkCopied] = useState(false);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
   );
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -242,9 +244,9 @@ export function BoardPage() {
       {/* Board header */}
       <div className="border-b border-[var(--color-gray-1)] bg-white px-4 py-3 sm:px-6">
         <div className="mx-auto max-w-[1400px]">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl text-[var(--color-gray-8)]">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="min-w-0">
+              <h2 className="truncate text-lg sm:text-xl text-[var(--color-gray-8)]">
                 {board.title}
                 {isCompleted && (
                   <span className="ml-2 inline-flex items-center rounded-[var(--radius-full)] bg-[var(--color-success)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-success)]">
@@ -253,10 +255,10 @@ export function BoardPage() {
                 )}
               </h2>
               {board.description && (
-                <p className="mt-1 text-sm text-[var(--color-gray-5)]">{board.description}</p>
+                <p className="mt-1 text-sm text-[var(--color-gray-5)] line-clamp-1">{board.description}</p>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <ParticipantPopover
                 participants={participants}
                 onlineParticipantIds={onlineParticipantIds}
@@ -269,7 +271,7 @@ export function BoardPage() {
               />
               <button
                 onClick={handleCopyLink}
-                className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] px-3 py-1.5 text-sm text-[var(--color-gray-6)] transition-colors hover:border-[var(--color-gray-3)] hover:text-[var(--color-gray-8)]"
+                className="flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] px-3 py-2 text-sm text-[var(--color-gray-6)] transition-colors hover:border-[var(--color-gray-3)] hover:text-[var(--color-gray-8)]"
               >
                 {linkCopied ? <Check size={14} /> : <Link2 size={14} />}
                 {linkCopied ? 'Copied!' : 'Share'}
@@ -310,7 +312,7 @@ export function BoardPage() {
                   onDragEnd={handleDragEnd}
                 >
                   <div
-                    className="grid gap-4"
+                    className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory sm:grid sm:overflow-x-visible sm:pb-0 sm:snap-none"
                     style={{
                       gridTemplateColumns: `repeat(${Math.min(columns.length, 4)}, minmax(280px, 1fr))`,
                     }}

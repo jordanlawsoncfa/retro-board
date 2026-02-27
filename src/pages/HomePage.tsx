@@ -87,7 +87,7 @@ export function HomePage() {
                   key={t.id}
                   type="button"
                   onClick={() => setSelectedTemplate(t.id)}
-                  className={`rounded-[var(--radius-md)] border-2 p-4 text-left transition-all ${
+                  className={`rounded-[var(--radius-md)] border-2 p-3 sm:p-4 text-left transition-all ${
                     selectedTemplate === t.id
                       ? 'border-[var(--color-navy)] bg-[var(--color-navy)]/5'
                       : 'border-[var(--color-gray-1)] bg-white hover:border-[var(--color-gray-2)]'

@@ -37,7 +37,7 @@ export function FacilitatorToolbar({
   const votingOn = settings.voting_enabled;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
       {!isCompleted && (
         <>
           {/* Reveal / Hide cards */}
@@ -122,14 +122,15 @@ function ToolbarButton({
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-md)] px-2.5 py-1.5 text-sm transition-colors',
+        'flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-md)] px-2.5 py-2 text-sm transition-colors',
         active
           ? 'bg-[var(--color-navy)]/10 text-[var(--color-navy)] font-medium'
           : 'text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-7)]'
       )}
       title={label}
+      aria-label={label}
     >
-      <Icon size={14} />
+      <Icon size={16} />
       <span className="hidden sm:inline">{label}</span>
     </button>
   );

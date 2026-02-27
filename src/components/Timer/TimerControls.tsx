@@ -22,6 +22,8 @@ export function TimerControls({ timer, onStart, onPause, onResume, onReset }: Ti
   const [open, setOpen] = useState(false);
   const [customMinutes, setCustomMinutes] = useState('');
   const popoverRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const isRunning = timer.status === 'running';
   const isPaused = timer.status === 'paused';
@@ -48,6 +50,28 @@ export function TimerControls({ timer, onStart, onPause, onResume, onReset }: Ti
     }
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
+  }, [open]);
+
+  // Focus management: move focus into popover on open, return to trigger on close
+  useEffect(() => {
+    if (open) {
+      // Focus the first focusable element inside the popover, or the popover itself
+      requestAnimationFrame(() => {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        const focusable = dialog.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable) {
+          focusable.focus();
+        } else {
+          dialog.focus();
+        }
+      });
+    } else {
+      // Return focus to the trigger button when popover closes
+      triggerRef.current?.focus();
+    }
   }, [open]);
 
   const handlePresetClick = (seconds: number) => {
@@ -82,6 +106,7 @@ export function TimerControls({ timer, onStart, onPause, onResume, onReset }: Ti
     <div className="relative" ref={popoverRef}>
       {/* Trigger button */}
       <button
+        ref={triggerRef}
         onClick={() => setOpen(!open)}
         className={triggerClassName}
         title="Timer"
@@ -95,8 +120,10 @@ export function TimerControls({ timer, onStart, onPause, onResume, onReset }: Ti
       {/* Popover */}
       {open && (
         <div
+          ref={dialogRef}
           role="dialog"
           aria-label="Timer controls"
+          tabIndex={-1}
           className="absolute right-0 top-full mt-2 w-60 rounded-lg border border-[var(--color-gray-2)] bg-white p-3 shadow-lg z-50"
         >
           {isActive || isExpired ? (
@@ -111,7 +138,11 @@ export function TimerControls({ timer, onStart, onPause, onResume, onReset }: Ti
                 <span
                   className="text-2xl font-mono font-bold tabular-nums"
                   style={{
-                    color: timer.remaining <= 10 ? 'var(--color-error)' : 'var(--color-navy)',
+                    color: isPaused
+                      ? 'var(--color-gray-5)'
+                      : timer.remaining <= 10
+                        ? 'var(--color-error)'
+                        : 'var(--color-navy)',
                   }}
                 >
                   {formatTime(timer.remaining)}

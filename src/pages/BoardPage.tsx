@@ -4,7 +4,7 @@ import {
   DndContext,
   DragOverlay,
   closestCorners,
-  pointerWithin,
+  rectIntersection,
   PointerSensor,
   TouchSensor,
   useSensor,
@@ -78,9 +78,9 @@ export function BoardPage() {
 
   // Custom collision detection: prioritize combine drop zones, fall back to sort collision
   const combineAwareCollision: CollisionDetection = useCallback((args) => {
-    // Check if pointer is within any combine:* droppable
-    const pointerCollisions = pointerWithin(args);
-    const combineHit = pointerCollisions.find(
+    // Check if dragged card overlaps any combine:* droppable (rect intersection is more forgiving than pointer)
+    const rectCollisions = rectIntersection(args);
+    const combineHit = rectCollisions.find(
       (c) => typeof c.id === 'string' && (c.id as string).startsWith('combine:')
     );
     if (combineHit) return [combineHit];

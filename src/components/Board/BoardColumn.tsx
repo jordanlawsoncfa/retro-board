@@ -4,7 +4,6 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { ThumbsUp, Pencil, Trash2, Check, X, Palette, Unlink, Layers } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { COLUMN_COLORS } from '@/utils/constants';
-import { getCardTextColor, CARD_TEXT_CLASSES } from '@/utils/cardColors';
 import { RetroCard } from './RetroCard';
 import { SortableCard } from './SortableCard';
 import { AddCardForm } from './AddCardForm';
@@ -46,16 +45,23 @@ function CombineDropZone({ cardId }: { cardId: string }) {
         'absolute inset-0 z-10 rounded-[var(--radius-md)] border-2 border-dashed transition-all duration-200',
         isOver
           ? 'border-[var(--color-navy)] bg-[var(--color-navy)]/10'
-          : 'border-transparent'
+          : 'border-[var(--color-navy)]/30 bg-[var(--color-navy)]/3'
       )}
     >
-      {isOver && (
-        <div className="flex h-full items-center justify-center">
-          <span className="rounded-[var(--radius-full)] bg-[var(--color-navy)] px-3 py-1 text-xs font-medium text-white shadow-md">
-            Drop to combine
-          </span>
-        </div>
-      )}
+      <div className={cn(
+        'flex h-full items-center justify-center transition-opacity duration-150',
+        isOver ? 'opacity-100' : 'opacity-60'
+      )}>
+        <span className={cn(
+          'flex items-center gap-1 rounded-[var(--radius-full)] px-2.5 py-0.5 text-[10px] font-medium shadow-sm',
+          isOver
+            ? 'bg-[var(--color-navy)] text-white'
+            : 'bg-[var(--color-navy)]/10 text-[var(--color-navy)]'
+        )}>
+          <Layers size={10} />
+          {isOver ? 'Drop to combine' : 'Combine'}
+        </span>
+      </div>
     </div>
   );
 }
@@ -107,7 +113,31 @@ export function BoardColumn({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [mergeSourceId, setMergeSourceId] = useState<string | null>(null);
+  const parentIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const card of cards) {
+      if (card.merged_with) ids.add(card.merged_with);
+    }
+    return ids;
+  }, [cards]);
+
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
+  // Auto-expand newly combined parent cards
+  useEffect(() => {
+    if (parentIds.size === 0) return;
+    setExpandedCards((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+      for (const id of parentIds) {
+        if (!next.has(id)) {
+          next.add(id);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [parentIds]);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
 
@@ -179,6 +209,15 @@ export function BoardColumn({
     [cards]
   );
 
+  // Vote counts per card for sorting
+  const voteCountByCard = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const v of votes) {
+      map.set(v.card_id, (map.get(v.card_id) || 0) + 1);
+    }
+    return map;
+  }, [votes]);
+
   const childrenByParent = useMemo(() => {
     const map = new Map<string, Card[]>();
     for (const card of cards) {
@@ -188,17 +227,13 @@ export function BoardColumn({
         map.set(card.merged_with, list);
       }
     }
-    return map;
-  }, [cards]);
-
-  // Vote counts per card for sorting
-  const voteCountByCard = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const v of votes) {
-      map.set(v.card_id, (map.get(v.card_id) || 0) + 1);
+    // Sort children by vote count descending
+    for (const [key, list] of map) {
+      list.sort((a, b) => (voteCountByCard.get(b.id) || 0) - (voteCountByCard.get(a.id) || 0));
+      map.set(key, list);
     }
     return map;
-  }, [votes]);
+  }, [cards, voteCountByCard]);
 
   // Sort root cards: group votes desc → group size desc → position asc
   const sortedCards = useMemo(() => {
@@ -466,56 +501,49 @@ export function BoardColumn({
 
                 {/* Expanded child cards (outside SortableCard for independent drag) */}
                 {isExpanded && children.length > 0 && (
-                  <div className="ml-3 mt-1 flex flex-col gap-1 border-l-2 border-[var(--color-navy)]/20 pl-2">
+                  <div className="ml-3 mt-1 flex flex-col gap-1.5 border-l-2 border-[var(--color-navy)]/20 pl-2">
                     {children.map((child) => {
                       const childVoteCount = voteCountByCard.get(child.id) || 0;
                       const childHasVoted = votes.some(
                         (v) => v.card_id === child.id && v.voter_id === currentParticipantId
                       );
-                      const childContrast = CARD_TEXT_CLASSES[getCardTextColor(child.color)];
+                      const isChildAuthor = child.author_id === currentParticipantId;
 
                       const childContent = (
-                        <div
-                          className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-[var(--color-gray-1)] bg-[var(--color-surface)] p-2 text-sm"
-                          style={{ backgroundColor: child.color || undefined }}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className={cn('whitespace-pre-wrap text-xs', childContrast.text)}>{child.text}</p>
-                            <div className="mt-1 flex items-center gap-2">
-                              <span className={cn('text-[10px]', childContrast.subtext)}>{child.author_name}</span>
-                              {votingEnabled && !isCompleted && (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); onToggleVote(child.id); }}
-                                  disabled={!childHasVoted && voteLimitReached}
-                                  className={cn(
-                                    'flex items-center gap-0.5 rounded-[var(--radius-full)] px-1.5 py-0.5 text-[10px] transition-colors',
-                                    childHasVoted
-                                      ? 'bg-[var(--color-navy)]/10 text-[var(--color-navy)] font-medium'
-                                      : 'text-[var(--color-gray-4)] hover:text-[var(--color-gray-6)]'
-                                  )}
-                                >
-                                  <ThumbsUp size={10} />
-                                  {!secretVoting && childVoteCount > 0 && <span>{childVoteCount}</span>}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-1">
-                            {canMerge && (
-                              <span className="text-[var(--color-gray-3)]" title="Drag to uncombine">
-                                <Layers size={12} />
-                              </span>
-                            )}
-                            {canMerge && (
+                        <div className="relative">
+                          {/* Uncombine button above child card */}
+                          {canMerge && (
+                            <div className="absolute -top-1 right-1 z-10 opacity-0 transition-opacity [div:hover>&]:opacity-100">
                               <button
                                 onClick={(e) => { e.stopPropagation(); onUncombineCard(child.id); }}
-                                className="rounded-[var(--radius-sm)] p-1 text-[var(--color-gray-4)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-6)] transition-colors"
+                                className="flex items-center gap-0.5 rounded-[var(--radius-full)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px] text-[var(--color-gray-5)] shadow-sm border border-[var(--color-gray-2)] hover:text-[var(--color-navy)] hover:border-[var(--color-navy)]/30 transition-colors"
                                 title="Uncombine card"
                                 aria-label="Uncombine card"
                               >
-                                <Unlink size={12} />
+                                <Unlink size={10} />
                               </button>
-                            )}
+                            </div>
+                          )}
+                          <div className="[&_>_div]:p-2 [&_>_div]:text-xs [&_p]:text-xs">
+                            <RetroCard
+                              id={child.id}
+                              text={child.text}
+                              authorName={child.author_name}
+                              authorId={child.author_id}
+                              color={child.color}
+                              voteCount={childVoteCount}
+                              hasVoted={childHasVoted}
+                              isAuthor={isChildAuthor}
+                              isObscured={isObscured}
+                              votingEnabled={votingEnabled}
+                              secretVoting={secretVoting}
+                              voteLimitReached={voteLimitReached}
+                              onUpdate={onUpdateCard}
+                              onDelete={onDeleteCard}
+                              onToggleVote={onToggleVote}
+                              isCompleted={isCompleted}
+                              canMerge={false}
+                            />
                           </div>
                         </div>
                       );

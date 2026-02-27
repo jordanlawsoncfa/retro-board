@@ -3,7 +3,8 @@ import { nanoid } from 'nanoid';
 import { supabase } from '@/lib/supabase';
 import { DEFAULT_BOARD_SETTINGS } from '@/utils/constants';
 import { BOARD_TEMPLATES } from '@/utils/templates';
-import type { Board, Column, Card, Vote, ActionItem, Participant, BoardTemplate, BoardSettings } from '@/types';
+import { saveBoardToHistory } from '@/utils/boardHistory';
+import type { Board, Column, Card, Vote, ActionItem, Participant, BoardTemplate, BoardSettings, ConnectionStatus } from '@/types';
 
 interface BoardState {
   board: Board | null;
@@ -12,6 +13,7 @@ interface BoardState {
   votes: Vote[];
   actionItems: ActionItem[];
   participants: Participant[];
+  connectionStatus: ConnectionStatus;
   loading: boolean;
   error: string | null;
   currentParticipantId: string | null;
@@ -62,6 +64,7 @@ const initialState = {
   votes: [] as Vote[],
   actionItems: [] as ActionItem[],
   participants: [] as Participant[],
+  connectionStatus: 'connected' as ConnectionStatus,
   loading: false,
   error: null as string | null,
   currentParticipantId: null as string | null,
@@ -129,11 +132,23 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       }));
     }
 
+    saveBoardToHistory({
+      boardId,
+      title,
+      createdAt: new Date().toISOString(),
+      lastVisited: new Date().toISOString(),
+      isCompleted: false,
+    });
+
     return boardId;
   },
 
   fetchBoard: async (boardId) => {
-    set({ loading: true, error: null });
+    const currentBoard = get().board;
+    const isRefresh = currentBoard !== null && currentBoard.id === boardId;
+    if (!isRefresh) {
+      set({ loading: true, error: null });
+    }
 
     const { data: board, error: boardError } = await supabase
       .from('boards')
@@ -155,6 +170,14 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     ]);
 
     const stored = sessionStorage.getItem(`retro-pid-${boardId}`);
+
+    saveBoardToHistory({
+      boardId,
+      title: board.title,
+      createdAt: board.created_at,
+      lastVisited: new Date().toISOString(),
+      isCompleted: !!board.archived_at,
+    });
 
     set({
       board,
@@ -205,6 +228,14 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         archived_at: archivedAt,
         settings: { ...board.settings, card_visibility: 'visible' as const, board_locked: true },
       },
+    });
+
+    saveBoardToHistory({
+      boardId: board.id,
+      title: board.title,
+      createdAt: board.created_at,
+      lastVisited: new Date().toISOString(),
+      isCompleted: true,
     });
   },
 
@@ -502,6 +533,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   // --- Realtime ---
 
   subscribeToBoard: (boardId) => {
+    let hasSubscribed = false;
+    let wasDisconnected = false;
+
     const channel = supabase
       .channel(`board:${boardId}`)
       .on(
@@ -655,13 +689,28 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       )
       .subscribe((status, err) => {
         if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] Board ${boardId}: postgres_changes subscription active`);
+          if (hasSubscribed && wasDisconnected) {
+            console.log(`[Realtime] Board ${boardId}: reconnected — re-fetching data`);
+            set({ connectionStatus: 'reconnected' });
+            get().fetchBoard(boardId).then(() => {
+              setTimeout(() => set({ connectionStatus: 'connected' }), 3000);
+            });
+          } else {
+            set({ connectionStatus: 'connected' });
+          }
+          hasSubscribed = true;
+          wasDisconnected = false;
         } else if (status === 'CHANNEL_ERROR') {
           console.error(`[Realtime] Board ${boardId}: channel error`, err);
+          wasDisconnected = true;
+          set({ connectionStatus: 'disconnected' });
         } else if (status === 'TIMED_OUT') {
           console.error(`[Realtime] Board ${boardId}: subscription timed out`);
-        } else {
-          console.log(`[Realtime] Board ${boardId}: status=${status}`);
+          wasDisconnected = true;
+          set({ connectionStatus: 'disconnected' });
+        } else if (status === 'CLOSED') {
+          wasDisconnected = true;
+          set({ connectionStatus: 'disconnected' });
         }
       });
 
@@ -670,5 +719,5 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     };
   },
 
-  reset: () => set({ ...initialState, onlineParticipantIds: [] }),
+  reset: () => set({ ...initialState, connectionStatus: 'connected', onlineParticipantIds: [] }),
 }));

@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ThumbsUp, Pencil, Trash2, Check, X } from 'lucide-react';
+import { ThumbsUp, Pencil, Trash2, Check, X, Palette } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { COLUMN_COLORS } from '@/utils/constants';
 import { RetroCard } from './RetroCard';
 import { SortableCard } from './SortableCard';
 import { AddCardForm } from './AddCardForm';
@@ -54,7 +55,9 @@ export function BoardColumn({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState(column.title);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const colorPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isEditingTitle && titleInputRef.current) {
@@ -62,6 +65,25 @@ export function BoardColumn({
       titleInputRef.current.select();
     }
   }, [isEditingTitle]);
+
+  // Close color picker on outside click
+  useEffect(() => {
+    if (!showColorPicker) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
+        setShowColorPicker(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showColorPicker]);
+
+  const handleColorSelect = (color: string) => {
+    if (onUpdateColumn) {
+      onUpdateColumn(column.id, { color });
+    }
+    setShowColorPicker(false);
+  };
 
   const handleSaveTitle = () => {
     const trimmed = editTitle.trim();
@@ -170,7 +192,7 @@ export function BoardColumn({
 
         {/* Admin action bar — always visible, not hover-dependent */}
         {isAdmin && !isCompleted && !isEditingTitle && (
-          <div className="flex items-center gap-1 border-t border-[var(--color-gray-1)] px-3 py-1.5">
+          <div className="relative flex items-center gap-1 border-t border-[var(--color-gray-1)] px-3 py-1.5">
             <button
               onClick={() => {
                 setEditTitle(column.title);
@@ -182,6 +204,14 @@ export function BoardColumn({
               <Pencil size={14} />
               <span>Rename</span>
             </button>
+            <button
+              onClick={() => setShowColorPicker(!showColorPicker)}
+              className="flex items-center gap-1.5 rounded-[var(--radius-md)] px-2.5 py-1.5 text-xs text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-7)] transition-colors"
+              aria-label="Change column color"
+            >
+              <Palette size={14} />
+              <span>Color</span>
+            </button>
             {canDeleteColumn && (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
@@ -191,6 +221,31 @@ export function BoardColumn({
                 <Trash2 size={14} />
                 <span>Delete</span>
               </button>
+            )}
+
+            {/* Color picker popover */}
+            {showColorPicker && (
+              <div
+                ref={colorPickerRef}
+                className="absolute left-2 top-full z-30 mt-1 rounded-[var(--radius-md)] border border-[var(--color-gray-2)] bg-white p-2 shadow-lg"
+              >
+                <div className="grid grid-cols-6 gap-1.5">
+                  {COLUMN_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => handleColorSelect(color)}
+                      className={cn(
+                        'h-7 w-7 rounded-full border-2 transition-transform hover:scale-110',
+                        column.color === color
+                          ? 'border-[var(--color-gray-8)] ring-2 ring-[var(--color-gray-8)]/20'
+                          : 'border-transparent'
+                      )}
+                      style={{ backgroundColor: color }}
+                      aria-label={`Select color ${color}`}
+                    />
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         )}

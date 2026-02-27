@@ -18,7 +18,6 @@ export type BoardTemplate =
   | 'custom';
 
 export type BoardView = 'grid' | 'swimlane' | 'list' | 'timeline';
-export type SwimlaneGroupBy = 'author' | 'votes' | 'time';
 export type ConnectionStatus = 'connected' | 'disconnected' | 'reconnected';
 
 export interface BoardSettings {

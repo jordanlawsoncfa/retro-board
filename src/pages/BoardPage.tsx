@@ -363,14 +363,12 @@ export function BoardPage() {
                 columns={columns}
                 cards={cards}
                 votes={votes}
-                participants={participants}
                 currentParticipantId={currentParticipantId}
                 isObscured={isObscured}
                 isCompleted={isCompleted}
                 votingEnabled={board.settings.voting_enabled}
                 secretVoting={board.settings.secret_voting}
                 maxVotesPerParticipant={board.settings.max_votes_per_participant}
-                boardCreatedAt={board.created_at}
                 onUpdateCard={updateCard}
                 onDeleteCard={deleteCard}
                 onToggleVote={toggleVote}

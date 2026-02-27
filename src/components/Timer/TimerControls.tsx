@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Clock, Play, Pause, RotateCcw } from 'lucide-react';
+import { cn } from '@/utils/cn';
 import { TIMER_PRESETS } from '@/utils/constants';
 import type { TimerState } from '@/types';
 
@@ -11,8 +12,14 @@ interface TimerControlsProps {
   onReset: () => void;
 }
 
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 export function TimerControls({ timer, onStart, onPause, onResume, onReset }: TimerControlsProps) {
-  const [showPopover, setShowPopover] = useState(false);
+  const [open, setOpen] = useState(false);
   const [customMinutes, setCustomMinutes] = useState('');
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -21,113 +28,177 @@ export function TimerControls({ timer, onStart, onPause, onResume, onReset }: Ti
   const isExpired = timer.status === 'expired';
   const isActive = isRunning || isPaused;
 
+  // Close on outside click
   useEffect(() => {
+    if (!open) return;
     function handleClickOutside(e: MouseEvent) {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
-        setShowPopover(false);
+        setOpen(false);
       }
     }
-    if (showPopover) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
     }
-  }, [showPopover]);
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [open]);
+
+  const handlePresetClick = (seconds: number) => {
+    onStart(seconds);
+    setOpen(false);
+  };
 
   const handleStartCustom = () => {
     const mins = parseFloat(customMinutes);
     if (mins > 0 && mins <= 60) {
       onStart(mins * 60);
       setCustomMinutes('');
-      setShowPopover(false);
+      setOpen(false);
     }
   };
 
-  const handlePresetClick = (seconds: number) => {
-    onStart(seconds);
-    setShowPopover(false);
+  const handleReset = () => {
+    onReset();
   };
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
+  // Determine trigger button style based on timer state
+  const triggerActive = isActive || isExpired;
+  const triggerClassName = cn(
+    'flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-md)] px-2.5 py-1.5 text-sm transition-colors',
+    isRunning && 'bg-[var(--color-navy)]/10 text-[var(--color-navy)] font-medium',
+    isPaused && 'bg-[var(--color-gray-1)] text-[var(--color-gray-6)] font-medium',
+    isExpired && 'bg-[var(--color-error)]/10 text-[var(--color-error)] font-medium animate-pulse',
+    !triggerActive && 'text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-7)]'
+  );
 
-  // Active timer: show compact inline controls
-  if (isActive) {
-    return (
-      <div className="flex items-center gap-1">
-        <span className="text-sm font-mono font-semibold tabular-nums" style={{ color: timer.remaining <= 10 ? '#DD0031' : 'var(--color-navy)' }}>
-          {formatTime(timer.remaining)}
-        </span>
-        {isRunning ? (
-          <button onClick={onPause} className="p-1 rounded hover:bg-[var(--color-gray-1)]" title="Pause">
-            <Pause size={14} />
-          </button>
-        ) : (
-          <button onClick={onResume} className="p-1 rounded hover:bg-[var(--color-gray-1)]" title="Resume">
-            <Play size={14} />
-          </button>
-        )}
-        <button onClick={onReset} className="p-1 rounded hover:bg-[var(--color-gray-1)]" title="Reset">
-          <RotateCcw size={14} />
-        </button>
-      </div>
-    );
-  }
-
-  // Idle/expired: show clock button + popover
   return (
     <div className="relative" ref={popoverRef}>
+      {/* Trigger button */}
       <button
-        onClick={() => setShowPopover(!showPopover)}
-        className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded-md transition-colors ${
-          isExpired
-            ? 'text-[#DD0031] hover:bg-red-50'
-            : 'text-[var(--color-gray-5)] hover:bg-[var(--color-gray-1)]'
-        }`}
-        title="Set timer"
+        onClick={() => setOpen(!open)}
+        className={triggerClassName}
+        title="Timer"
+        aria-expanded={open}
+        aria-haspopup="dialog"
       >
         <Clock size={14} />
-        <span>{isExpired ? "Time's up!" : 'Timer'}</span>
+        <span className="hidden sm:inline">Timer</span>
       </button>
 
-      {showPopover && (
-        <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-[var(--color-gray-2)] p-3 z-50 w-56">
-          <p className="text-xs font-medium text-[var(--color-gray-5)] mb-2">Quick start</p>
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {TIMER_PRESETS.map((preset) => (
-              <button
-                key={preset.seconds}
-                onClick={() => handlePresetClick(preset.seconds)}
-                className="px-2.5 py-1 text-xs rounded-full border border-[var(--color-gray-2)] hover:bg-[var(--color-navy)] hover:text-white hover:border-[var(--color-navy)] transition-colors"
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-          <div className="border-t border-[var(--color-gray-1)] pt-2">
-            <p className="text-xs font-medium text-[var(--color-gray-5)] mb-1.5">Custom</p>
-            <div className="flex gap-1.5">
-              <input
-                type="number"
-                min="1"
-                max="60"
-                value={customMinutes}
-                onChange={(e) => setCustomMinutes(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleStartCustom()}
-                placeholder="Minutes"
-                className="flex-1 px-2 py-1 text-xs border border-[var(--color-gray-2)] rounded-md focus:outline-none focus:border-[var(--color-navy)]"
-              />
-              <button
-                onClick={handleStartCustom}
-                disabled={!customMinutes || parseFloat(customMinutes) <= 0 || parseFloat(customMinutes) > 60}
-                className="px-3 py-1 text-xs bg-[var(--color-navy)] text-white rounded-md hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-              >
-                Start
-              </button>
+      {/* Popover */}
+      {open && (
+        <div
+          role="dialog"
+          aria-label="Timer controls"
+          className="absolute right-0 top-full mt-2 w-60 rounded-lg border border-[var(--color-gray-2)] bg-white p-3 shadow-lg z-50"
+        >
+          {isActive || isExpired ? (
+            /* Active / expired state */
+            <div className="flex flex-col items-center gap-3">
+              {/* Countdown or expired message */}
+              {isExpired ? (
+                <span className="text-lg font-semibold text-[var(--color-error)] animate-pulse">
+                  Time&apos;s up!
+                </span>
+              ) : (
+                <span
+                  className="text-2xl font-mono font-bold tabular-nums"
+                  style={{
+                    color: timer.remaining <= 10 ? 'var(--color-error)' : 'var(--color-navy)',
+                  }}
+                >
+                  {formatTime(timer.remaining)}
+                </span>
+              )}
+
+              {/* Controls */}
+              <div className="flex items-center gap-2">
+                {isRunning && (
+                  <button
+                    onClick={onPause}
+                    className="flex items-center gap-1 rounded-md border border-[var(--color-gray-2)] px-3 py-1.5 text-xs hover:bg-[var(--color-gray-1)] transition-colors"
+                    title="Pause"
+                  >
+                    <Pause size={12} />
+                    Pause
+                  </button>
+                )}
+                {isPaused && (
+                  <button
+                    onClick={onResume}
+                    className="flex items-center gap-1 rounded-md bg-[var(--color-navy)] px-3 py-1.5 text-xs text-white hover:opacity-90 transition-opacity"
+                    title="Resume"
+                  >
+                    <Play size={12} />
+                    Resume
+                  </button>
+                )}
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-1 rounded-md border border-[var(--color-gray-2)] px-3 py-1.5 text-xs hover:bg-[var(--color-gray-1)] transition-colors"
+                  title="Reset"
+                >
+                  <RotateCcw size={12} />
+                  Reset
+                </button>
+              </div>
+
+              {/* New timer link */}
+              <div className="w-full border-t border-[var(--color-gray-1)] pt-2 text-center">
+                <button
+                  onClick={handleReset}
+                  className="text-xs text-[var(--color-navy)] hover:underline"
+                >
+                  New timer
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Idle state — presets + custom */
+            <>
+              <p className="mb-2 text-xs font-medium text-[var(--color-gray-5)]">Quick start</p>
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                {TIMER_PRESETS.map((preset) => (
+                  <button
+                    key={preset.seconds}
+                    onClick={() => handlePresetClick(preset.seconds)}
+                    className="rounded-full border border-[var(--color-gray-2)] px-2.5 py-1 text-xs transition-colors hover:border-[var(--color-navy)] hover:bg-[var(--color-navy)] hover:text-white"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <div className="border-t border-[var(--color-gray-1)] pt-2">
+                <p className="mb-1.5 text-xs font-medium text-[var(--color-gray-5)]">Custom</p>
+                <div className="flex gap-1.5">
+                  <input
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={customMinutes}
+                    onChange={(e) => setCustomMinutes(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleStartCustom()}
+                    placeholder="Minutes"
+                    className="flex-1 rounded-md border border-[var(--color-gray-2)] px-2 py-1 text-xs focus:border-[var(--color-navy)] focus:outline-none"
+                  />
+                  <button
+                    onClick={handleStartCustom}
+                    disabled={!customMinutes || parseFloat(customMinutes) <= 0 || parseFloat(customMinutes) > 60}
+                    className="rounded-md bg-[var(--color-navy)] px-3 py-1 text-xs text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Start
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

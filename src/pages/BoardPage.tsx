@@ -11,7 +11,7 @@ import {
 import { Link2, Check } from 'lucide-react';
 import { AppShell } from '@/components/Layout';
 import { Button, Input, Modal } from '@/components/common';
-import { BoardColumn, FacilitatorToolbar, VoteStatus, ViewToggle, SwimlaneView, ListView, TimelineView, ParticipantPopover } from '@/components/Board';
+import { BoardColumn, FacilitatorToolbar, VoteStatus, ViewToggle, SwimlaneView, ListView, TimelineView, ParticipantPopover, ConnectionStatusBanner } from '@/components/Board';
 import type { BoardView } from '@/types';
 import { useBoardStore } from '@/stores/boardStore';
 import { useTimer } from '@/hooks/useTimer';
@@ -287,6 +287,9 @@ export function BoardPage() {
           </div>
         </div>
       </div>
+
+      {/* Connection status */}
+      <ConnectionStatusBanner />
 
       {/* View toggle */}
       {isJoined && columns.length > 0 && (

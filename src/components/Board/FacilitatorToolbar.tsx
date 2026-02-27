@@ -37,7 +37,7 @@ export function FacilitatorToolbar({
   const votingOn = settings.voting_enabled;
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto">
+    <div className="flex items-center gap-2">
       {!isCompleted && (
         <>
           {/* Reveal / Hide cards */}

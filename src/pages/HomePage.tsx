@@ -31,30 +31,22 @@ export function HomePage() {
   };
 
   return (
-    <AppShell>
+    <AppShell headerRight={<BoardHistorySidebar />}>
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 sm:px-6">
-        <div className="flex items-center gap-12">
-          {/* Hero */}
-          <div className="text-center">
-            <h1 className="text-[var(--color-gray-8)]">
-              Run better retros with{' '}
-              <span className="text-[var(--color-primary)]">{APP_NAME}</span>
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--color-gray-5)]">
-              A real-time retrospective board for teams. Create columns, add cards,
-              vote, and turn insights into action items — all in one place.
-            </p>
-            <div className="mt-8">
-              <Button size="lg" onClick={() => setShowCreateModal(true)}>
-                <Plus size={20} />
-                Create a Retro Board
-              </Button>
-            </div>
-          </div>
-
-          {/* History sidebar */}
-          <div className="hidden lg:block">
-            <BoardHistorySidebar />
+        <div className="text-center">
+          <h1 className="text-[var(--color-gray-8)]">
+            Run better retros with{' '}
+            <span className="text-[var(--color-primary)]">{APP_NAME}</span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--color-gray-5)]">
+            A real-time retrospective board for teams. Create columns, add cards,
+            vote, and turn insights into action items — all in one place.
+          </p>
+          <div className="mt-8">
+            <Button size="lg" onClick={() => setShowCreateModal(true)}>
+              <Plus size={20} />
+              Create a Retro Board
+            </Button>
           </div>
         </div>
       </div>

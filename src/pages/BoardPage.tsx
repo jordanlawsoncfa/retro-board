@@ -1,15 +1,21 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   DndContext,
+  DragOverlay,
   closestCorners,
+  pointerWithin,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
+  type CollisionDetection,
 } from '@dnd-kit/core';
 import { Link2, Check } from 'lucide-react';
+import { getCardTextColor, CARD_TEXT_CLASSES } from '@/utils/cardColors';
+import { cn } from '@/utils/cn';
 import { AppShell } from '@/components/Layout';
 import { Button, Input, Modal } from '@/components/common';
 import { BoardColumn, FacilitatorToolbar, VoteStatus, ViewToggle, SwimlaneView, ListView, TimelineView, ParticipantPopover, ConnectionStatusBanner, AddColumnButton } from '@/components/Board';
@@ -63,10 +69,24 @@ export function BoardPage() {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
   );
+
+  // Custom collision detection: prioritize combine drop zones, fall back to sort collision
+  const combineAwareCollision: CollisionDetection = useCallback((args) => {
+    // Check if pointer is within any combine:* droppable
+    const pointerCollisions = pointerWithin(args);
+    const combineHit = pointerCollisions.find(
+      (c) => typeof c.id === 'string' && (c.id as string).startsWith('combine:')
+    );
+    if (combineHit) return [combineHit];
+    // Fall back to standard sorting collision
+    return closestCorners(args);
+  }, []);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const currentView = (searchParams.get('view') as BoardView) || 'grid';
@@ -115,19 +135,64 @@ export function BoardPage() {
     }
   };
 
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string);
+  }, []);
+
+  const handleDragCancel = useCallback(() => {
+    setActiveDragId(null);
+  }, []);
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
+      setActiveDragId(null);
+
       if (!over || active.id === over.id) return;
 
-      const cardId = active.id as string;
-      const overId = over.id as string;
+      const activeIdStr = active.id as string;
+      const overIdStr = over.id as string;
 
-      // Determine target column — drop on a card or on the column itself
-      const overCard = cards.find((c) => c.id === overId);
+      const boardLocked = board?.settings.board_locked;
+      const isArchived = !!board?.archived_at;
+      const canCombine = !boardLocked && !isArchived;
+
+      // Handle child card drag (uncombine or re-parent)
+      if (activeIdStr.startsWith('child:')) {
+        const childCardId = activeIdStr.slice(6);
+
+        // If dropped on a combine zone → re-parent to new card
+        if (overIdStr.startsWith('combine:') && canCombine) {
+          const newParentId = overIdStr.slice(8);
+          const childCard = cards.find((c) => c.id === childCardId);
+          // Skip if already parented here (no-op)
+          if (newParentId === childCard?.merged_with) return;
+          combineCards(newParentId, childCardId);
+          return;
+        }
+
+        // Otherwise → uncombine (becomes independent card)
+        if (canCombine) {
+          uncombineCard(childCardId);
+        }
+        return;
+      }
+
+      // Handle root card drop on combine zone → combine
+      if (overIdStr.startsWith('combine:') && canCombine) {
+        const targetCardId = overIdStr.slice(8);
+        // Prevent self-combine
+        if (targetCardId === activeIdStr) return;
+        combineCards(targetCardId, activeIdStr);
+        return;
+      }
+
+      // Normal reorder / cross-column move
+      const cardId = activeIdStr;
+      const overCard = cards.find((c) => c.id === overIdStr);
       const targetColumnId = overCard
         ? overCard.column_id
-        : columns.find((c) => c.id === overId)?.id;
+        : columns.find((c) => c.id === overIdStr)?.id;
 
       if (!targetColumnId) return;
 
@@ -136,14 +201,14 @@ export function BoardPage() {
         .sort((a, b) => a.position - b.position);
 
       const overIndex = overCard
-        ? targetCards.findIndex((c) => c.id === overId)
+        ? targetCards.findIndex((c) => c.id === overIdStr)
         : targetCards.length;
 
       const newPosition = overIndex >= 0 ? overIndex : targetCards.length;
 
       moveCard(cardId, targetColumnId, newPosition);
     },
-    [cards, columns, moveCard]
+    [cards, columns, moveCard, combineCards, uncombineCard, board]
   );
 
   const handleAddCard = useCallback(
@@ -187,6 +252,36 @@ export function BoardPage() {
     await completeBoard();
     setShowCompleteModal(false);
   }, [completeBoard]);
+
+  // Card preview for DragOverlay
+  const dragOverlayContent = useMemo(() => {
+    if (!activeDragId) return null;
+    const isChild = activeDragId.startsWith('child:');
+    const cardId = isChild ? activeDragId.slice(6) : activeDragId;
+    const card = cards.find((c) => c.id === cardId);
+    if (!card) return null;
+    const contrast = CARD_TEXT_CLASSES[getCardTextColor(card.color)];
+    return (
+      <div
+        className={cn(
+          'rounded-[var(--radius-md)] border border-[var(--color-gray-1)] p-3 shadow-lg',
+          isChild ? 'w-[260px] rotate-1' : 'w-[280px] rotate-2'
+        )}
+        style={{ backgroundColor: card.color || 'var(--color-surface)' }}
+      >
+        <p className={cn(
+          'whitespace-pre-wrap',
+          isChild ? 'text-xs' : 'text-sm',
+          contrast.text
+        )}>
+          {card.text}
+        </p>
+        <span className={cn('mt-1 block text-xs', contrast.subtext)}>
+          {card.author_name}
+        </span>
+      </div>
+    );
+  }, [activeDragId, cards]);
 
   if (loading) {
     return (
@@ -313,8 +408,10 @@ export function BoardPage() {
               <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
                 <DndContext
                   sensors={sensors}
-                  collisionDetection={closestCorners}
+                  collisionDetection={combineAwareCollision}
+                  onDragStart={handleDragStart}
                   onDragEnd={handleDragEnd}
+                  onDragCancel={handleDragCancel}
                 >
                   <div
                     className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory sm:grid sm:overflow-x-visible sm:pb-0 sm:snap-none"
@@ -347,6 +444,7 @@ export function BoardPage() {
                           isCompleted={isCompleted}
                           isAdmin={isAdmin}
                           boardLocked={board.settings.board_locked}
+                          activeDragId={activeDragId}
                           onUpdateColumn={updateColumn}
                           onDeleteColumn={deleteColumn}
                           canDeleteColumn={columns.length > 1}
@@ -359,6 +457,11 @@ export function BoardPage() {
                       />
                     )}
                   </div>
+
+                  {/* Drag overlay — visual preview of card being dragged */}
+                  <DragOverlay dropAnimation={{ duration: 200, easing: 'ease' }}>
+                    {dragOverlayContent}
+                  </DragOverlay>
                 </DndContext>
               </div>
             )}

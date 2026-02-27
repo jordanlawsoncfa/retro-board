@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { useDroppable } from '@dnd-kit/core';
+import { useState, useRef, useEffect, useMemo, type ReactNode } from 'react';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ThumbsUp, Pencil, Trash2, Check, X, Palette } from 'lucide-react';
+import { ThumbsUp, Pencil, Trash2, Check, X, Palette, Unlink, Layers } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { COLUMN_COLORS } from '@/utils/constants';
+import { getCardTextColor, CARD_TEXT_CLASSES } from '@/utils/cardColors';
 import { RetroCard } from './RetroCard';
 import { SortableCard } from './SortableCard';
 import { AddCardForm } from './AddCardForm';
@@ -28,9 +29,51 @@ interface BoardColumnProps {
   isCompleted?: boolean;
   isAdmin?: boolean;
   boardLocked?: boolean;
+  activeDragId: string | null;
   onUpdateColumn?: (columnId: string, updates: Partial<Pick<Column, 'title' | 'color' | 'description'>>) => void;
   onDeleteColumn?: (columnId: string) => void;
   canDeleteColumn?: boolean;
+}
+
+/** Drop zone overlay that appears on cards during drag for combining */
+function CombineDropZone({ cardId }: { cardId: string }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `combine:${cardId}` });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'absolute inset-0 z-10 rounded-[var(--radius-md)] border-2 border-dashed transition-all duration-200',
+        isOver
+          ? 'border-[var(--color-navy)] bg-[var(--color-navy)]/10'
+          : 'border-transparent'
+      )}
+    >
+      {isOver && (
+        <div className="flex h-full items-center justify-center">
+          <span className="rounded-[var(--radius-full)] bg-[var(--color-navy)] px-3 py-1 text-xs font-medium text-white shadow-md">
+            Drop to combine
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Draggable wrapper for child cards (for uncombine via drag-out) */
+function DraggableChildCard({ id, children }: { id: string; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ opacity: isDragging ? 0.3 : 1, cursor: 'grab' }}
+      {...attributes}
+      {...listeners}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function BoardColumn({
@@ -52,6 +95,7 @@ export function BoardColumn({
   isCompleted,
   isAdmin,
   boardLocked,
+  activeDragId,
   onUpdateColumn,
   onDeleteColumn,
   canDeleteColumn,
@@ -63,6 +107,7 @@ export function BoardColumn({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [mergeSourceId, setMergeSourceId] = useState<string | null>(null);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const titleInputRef = useRef<HTMLInputElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
 
@@ -116,6 +161,18 @@ export function BoardColumn({
     setShowDeleteConfirm(false);
   };
 
+  const toggleCardExpanded = (cardId: string) => {
+    setExpandedCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(cardId)) {
+        next.delete(cardId);
+      } else {
+        next.add(cardId);
+      }
+      return next;
+    });
+  };
+
   // Separate root cards from children
   const rootCards = useMemo(
     () => cards.filter((c) => !c.merged_with),
@@ -148,15 +205,12 @@ export function BoardColumn({
     return [...rootCards].sort((a, b) => {
       const aChildren = childrenByParent.get(a.id) || [];
       const bChildren = childrenByParent.get(b.id) || [];
-      // Group vote count = parent votes + children votes
       const aVotes = (voteCountByCard.get(a.id) || 0) + aChildren.reduce((s, c) => s + (voteCountByCard.get(c.id) || 0), 0);
       const bVotes = (voteCountByCard.get(b.id) || 0) + bChildren.reduce((s, c) => s + (voteCountByCard.get(c.id) || 0), 0);
       if (bVotes !== aVotes) return bVotes - aVotes;
-      // Group size desc
       const aSize = 1 + aChildren.length;
       const bSize = 1 + bChildren.length;
       if (bSize !== aSize) return bSize - aSize;
-      // Position tiebreaker
       return a.position - b.position;
     });
   }, [rootCards, childrenByParent, voteCountByCard]);
@@ -175,6 +229,12 @@ export function BoardColumn({
   }, [votes, currentParticipantId, maxVotesPerParticipant]);
 
   const canMerge = !isCompleted && !boardLocked;
+
+  // Determine if a drag is active (root card or child card)
+  const isDragActive = activeDragId !== null;
+  const activeDragRootId = activeDragId
+    ? (activeDragId.startsWith('child:') ? null : activeDragId)
+    : null;
 
   const handleMergeTarget = (targetCardId: string) => {
     if (mergeSourceId && mergeSourceId !== targetCardId) {
@@ -246,7 +306,7 @@ export function BoardColumn({
           )}
         </div>
 
-        {/* Admin action bar — always visible, not hover-dependent */}
+        {/* Admin action bar */}
         {isAdmin && !isCompleted && !isEditingTitle && (
           <div className="relative flex items-center gap-1 border-t border-[var(--color-gray-1)] px-3 py-1.5">
             <button
@@ -337,7 +397,7 @@ export function BoardColumn({
         </p>
       )}
 
-      {/* Merge mode cancel overlay */}
+      {/* Merge mode cancel overlay (button-based merge fallback) */}
       {mergeSourceId && (
         <div className="flex items-center justify-between bg-[var(--color-navy)]/5 px-4 py-2 text-sm">
           <span className="text-[var(--color-navy)] font-medium">Select a card to merge into</span>
@@ -360,38 +420,120 @@ export function BoardColumn({
               (sum, c) => sum + (voteCountByCard.get(c.id) || 0), 0
             );
             const hasVoted = cardVotes.some((v) => v.voter_id === currentParticipantId);
+            const isExpanded = expandedCards.has(card.id);
+            const showCombineZone = isDragActive && activeDragRootId !== card.id && canMerge
+              && (activeDragId?.startsWith('child:') ? `child:${card.id}` !== activeDragId : true);
 
             return (
-              <SortableCard key={card.id} id={card.id}>
-                <RetroCard
-                  id={card.id}
-                  text={card.text}
-                  authorName={card.author_name}
-                  authorId={card.author_id}
-                  color={card.color}
-                  voteCount={cardVotes.length + childVotes}
-                  hasVoted={hasVoted}
-                  isAuthor={card.author_id === currentParticipantId}
-                  isObscured={isObscured}
-                  votingEnabled={votingEnabled}
-                  secretVoting={secretVoting}
-                  voteLimitReached={voteLimitReached}
-                  onUpdate={onUpdateCard}
-                  onDelete={onDeleteCard}
-                  onToggleVote={onToggleVote}
-                  isCompleted={isCompleted}
-                  childCards={children}
-                  votes={votes}
-                  currentParticipantId={currentParticipantId}
-                  canMerge={canMerge}
-                  isMergeSource={mergeSourceId === card.id}
-                  isMergeTarget={mergeSourceId !== null && mergeSourceId !== card.id}
-                  onStartMerge={() => setMergeSourceId(card.id)}
-                  onAcceptMerge={() => handleMergeTarget(card.id)}
-                  onCancelMerge={() => setMergeSourceId(null)}
-                  onUncombineCard={onUncombineCard}
-                />
-              </SortableCard>
+              <div key={card.id}>
+                {/* Root card (sortable) */}
+                <SortableCard id={card.id}>
+                  <div className="relative">
+                    <RetroCard
+                      id={card.id}
+                      text={card.text}
+                      authorName={card.author_name}
+                      authorId={card.author_id}
+                      color={card.color}
+                      voteCount={cardVotes.length + childVotes}
+                      hasVoted={hasVoted}
+                      isAuthor={card.author_id === currentParticipantId}
+                      isObscured={isObscured}
+                      votingEnabled={votingEnabled}
+                      secretVoting={secretVoting}
+                      voteLimitReached={voteLimitReached}
+                      onUpdate={onUpdateCard}
+                      onDelete={onDeleteCard}
+                      onToggleVote={onToggleVote}
+                      isCompleted={isCompleted}
+                      childCards={children}
+                      votes={votes}
+                      currentParticipantId={currentParticipantId}
+                      canMerge={canMerge}
+                      isMergeSource={mergeSourceId === card.id}
+                      isMergeTarget={mergeSourceId !== null && mergeSourceId !== card.id}
+                      onStartMerge={() => setMergeSourceId(card.id)}
+                      onAcceptMerge={() => handleMergeTarget(card.id)}
+                      onCancelMerge={() => setMergeSourceId(null)}
+                      onUncombineCard={onUncombineCard}
+                      expanded={isExpanded}
+                      onToggleExpand={() => toggleCardExpanded(card.id)}
+                    />
+                    {/* Combine drop zone overlay (shown during drag) */}
+                    {showCombineZone && <CombineDropZone cardId={card.id} />}
+                  </div>
+                </SortableCard>
+
+                {/* Expanded child cards (outside SortableCard for independent drag) */}
+                {isExpanded && children.length > 0 && (
+                  <div className="ml-3 mt-1 flex flex-col gap-1 border-l-2 border-[var(--color-navy)]/20 pl-2">
+                    {children.map((child) => {
+                      const childVoteCount = voteCountByCard.get(child.id) || 0;
+                      const childHasVoted = votes.some(
+                        (v) => v.card_id === child.id && v.voter_id === currentParticipantId
+                      );
+                      const childContrast = CARD_TEXT_CLASSES[getCardTextColor(child.color)];
+
+                      const childContent = (
+                        <div
+                          className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-[var(--color-gray-1)] bg-[var(--color-surface)] p-2 text-sm"
+                          style={{ backgroundColor: child.color || undefined }}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className={cn('whitespace-pre-wrap text-xs', childContrast.text)}>{child.text}</p>
+                            <div className="mt-1 flex items-center gap-2">
+                              <span className={cn('text-[10px]', childContrast.subtext)}>{child.author_name}</span>
+                              {votingEnabled && !isCompleted && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onToggleVote(child.id); }}
+                                  disabled={!childHasVoted && voteLimitReached}
+                                  className={cn(
+                                    'flex items-center gap-0.5 rounded-[var(--radius-full)] px-1.5 py-0.5 text-[10px] transition-colors',
+                                    childHasVoted
+                                      ? 'bg-[var(--color-navy)]/10 text-[var(--color-navy)] font-medium'
+                                      : 'text-[var(--color-gray-4)] hover:text-[var(--color-gray-6)]'
+                                  )}
+                                >
+                                  <ThumbsUp size={10} />
+                                  {!secretVoting && childVoteCount > 0 && <span>{childVoteCount}</span>}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1">
+                            {canMerge && (
+                              <span className="text-[var(--color-gray-3)]" title="Drag to uncombine">
+                                <Layers size={12} />
+                              </span>
+                            )}
+                            {canMerge && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); onUncombineCard(child.id); }}
+                                className="rounded-[var(--radius-sm)] p-1 text-[var(--color-gray-4)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-6)] transition-colors"
+                                title="Uncombine card"
+                                aria-label="Uncombine card"
+                              >
+                                <Unlink size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+
+                      // Wrap in DraggableChildCard when merge is possible
+                      if (canMerge) {
+                        return (
+                          <DraggableChildCard key={child.id} id={`child:${child.id}`}>
+                            {childContent}
+                          </DraggableChildCard>
+                        );
+                      }
+
+                      return <div key={child.id}>{childContent}</div>;
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </SortableContext>

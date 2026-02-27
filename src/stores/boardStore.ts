@@ -402,8 +402,12 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     const { error } = await supabase.from('cards').delete().eq('id', cardId);
     if (error) throw error;
 
+    // DB ON DELETE SET NULL auto-clears merged_with on children;
+    // mirror that optimistically so children don't become invisible ghost cards
     set((state) => ({
-      cards: state.cards.filter((c) => c.id !== cardId),
+      cards: state.cards
+        .filter((c) => c.id !== cardId)
+        .map((c) => c.merged_with === cardId ? { ...c, merged_with: null } : c),
       votes: state.votes.filter((v) => v.card_id !== cardId),
     }));
   },

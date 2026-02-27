@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Trash2, ThumbsUp, Check, X, Layers, ChevronDown, ChevronRight, Unlink } from 'lucide-react';
+import { Pencil, Trash2, ThumbsUp, Check, X, Layers, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { getCardTextColor, CARD_TEXT_CLASSES } from '../../utils/cardColors';
 import { CardColorPicker } from './CardColorPicker';
@@ -33,6 +33,8 @@ interface RetroCardProps {
   onAcceptMerge?: () => void;
   onCancelMerge?: () => void;
   onUncombineCard?: (childCardId: string) => void;
+  expanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 export function RetroCard({
@@ -61,12 +63,13 @@ export function RetroCard({
   onAcceptMerge,
   onCancelMerge,
   onUncombineCard,
+  expanded = false,
+  onToggleExpand,
 }: RetroCardProps) {
   const contrast = CARD_TEXT_CLASSES[getCardTextColor(color)];
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(text);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
 
   const hasChildren = childCards.length > 0;
 
@@ -158,7 +161,7 @@ export function RetroCard({
                 {/* Combined count badge */}
                 {hasChildren && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+                    onClick={(e) => { e.stopPropagation(); onToggleExpand?.(); }}
                     className="flex items-center gap-0.5 rounded-[var(--radius-full)] bg-[var(--color-navy)]/10 px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-navy)] hover:bg-[var(--color-navy)]/20 transition-colors"
                     title={`${childCards.length} combined card${childCards.length === 1 ? '' : 's'}`}
                   >
@@ -265,58 +268,6 @@ export function RetroCard({
         )}
       </div>
 
-      {/* Expanded child cards */}
-      {hasChildren && expanded && (
-        <div className="ml-3 mt-1 flex flex-col gap-1 border-l-2 border-[var(--color-navy)]/20 pl-2">
-          {childCards.map((child) => {
-            const childVoteCount = votes.filter((v) => v.card_id === child.id).length;
-            const childHasVoted = votes.some(
-              (v) => v.card_id === child.id && v.voter_id === currentParticipantId
-            );
-            const childContrast = CARD_TEXT_CLASSES[getCardTextColor(child.color)];
-
-            return (
-              <div
-                key={child.id}
-                className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-[var(--color-gray-1)] bg-[var(--color-surface)] p-2 text-sm"
-                style={{ backgroundColor: child.color || undefined }}
-              >
-                <div className="flex-1 min-w-0">
-                  <p className={cn('whitespace-pre-wrap text-xs', childContrast.text)}>{child.text}</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className={cn('text-[10px]', childContrast.subtext)}>{child.author_name}</span>
-                    {votingEnabled && !isCompleted && (
-                      <button
-                        onClick={() => onToggleVote(child.id)}
-                        disabled={!childHasVoted && voteLimitReached}
-                        className={cn(
-                          'flex items-center gap-0.5 rounded-[var(--radius-full)] px-1.5 py-0.5 text-[10px] transition-colors',
-                          childHasVoted
-                            ? 'bg-[var(--color-navy)]/10 text-[var(--color-navy)] font-medium'
-                            : 'text-[var(--color-gray-4)] hover:text-[var(--color-gray-6)]'
-                        )}
-                      >
-                        <ThumbsUp size={10} />
-                        {!secretVoting && childVoteCount > 0 && <span>{childVoteCount}</span>}
-                      </button>
-                    )}
-                  </div>
-                </div>
-                {canMerge && onUncombineCard && (
-                  <button
-                    onClick={() => onUncombineCard(child.id)}
-                    className="shrink-0 rounded-[var(--radius-sm)] p-1 text-[var(--color-gray-4)] hover:bg-[var(--color-gray-1)] hover:text-[var(--color-gray-6)] transition-colors"
-                    title="Uncombine card"
-                    aria-label="Uncombine card"
-                  >
-                    <Unlink size={12} />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

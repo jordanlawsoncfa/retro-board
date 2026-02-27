@@ -19,6 +19,7 @@ export type BoardTemplate =
 
 export type BoardView = 'grid' | 'swimlane' | 'list' | 'timeline';
 export type SwimlaneGroupBy = 'author' | 'votes' | 'time';
+export type ConnectionStatus = 'connected' | 'disconnected' | 'reconnected';
 
 export interface BoardSettings {
   card_visibility: 'hidden' | 'visible';
@@ -105,4 +106,13 @@ export interface TemplateDefinition {
   name: string;
   description: string;
   columns: { title: string; color: string; description?: string }[];
+}
+
+// Board history (localStorage)
+export interface BoardHistoryEntry {
+  boardId: string;
+  title: string;
+  createdAt: string;
+  lastVisited: string;
+  isCompleted: boolean;
 }

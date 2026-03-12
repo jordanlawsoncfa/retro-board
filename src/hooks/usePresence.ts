@@ -9,12 +9,12 @@ interface PresenceState {
   online_at: string;
 }
 
-export function usePresence(boardId: string | undefined, participantId: string | null) {
+export function usePresence(boardId: string | undefined, participantId: string | null, liveSync = true) {
   const setOnlineParticipantIds = useBoardStore((s) => s.setOnlineParticipantIds);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
-    if (!boardId || !participantId) return;
+    if (!boardId || !participantId || !liveSync) return;
 
     const participant = useBoardStore.getState().participants.find((p) => p.id === participantId);
     if (!participant) return;
@@ -47,5 +47,5 @@ export function usePresence(boardId: string | undefined, participantId: string |
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [boardId, participantId, setOnlineParticipantIds]);
+  }, [boardId, participantId, liveSync, setOnlineParticipantIds]);
 }

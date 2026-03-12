@@ -26,5 +26,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Superpowers brainstorming
+# Superpowers
 .superpowers/
+.worktrees/

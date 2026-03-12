@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { AppShell } from '@/components/Layout';
@@ -6,6 +6,7 @@ import { Button, Input, Textarea, Modal } from '@/components/common';
 import { BoardHistorySidebar } from '@/components/Board';
 import { BOARD_TEMPLATES, APP_NAME } from '@/utils';
 import { useBoardStore } from '@/stores/boardStore';
+import { useAppSettingsStore } from '@/stores/appSettingsStore';
 import type { BoardTemplate } from '@/types';
 
 export function HomePage() {
@@ -16,6 +17,18 @@ export function HomePage() {
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
   const createBoard = useBoardStore((s) => s.createBoard);
+  const appSettings = useAppSettingsStore((s) => s.settings);
+  const fetchAppSettings = useAppSettingsStore((s) => s.fetchSettings);
+
+  useEffect(() => {
+    fetchAppSettings();
+  }, [fetchAppSettings]);
+
+  useEffect(() => {
+    if (appSettings?.default_template) {
+      setSelectedTemplate(appSettings.default_template);
+    }
+  }, [appSettings]);
 
   const handleCreate = async () => {
     if (!title.trim()) return;

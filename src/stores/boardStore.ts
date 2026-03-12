@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { DEFAULT_BOARD_SETTINGS } from '@/utils/constants';
 import { BOARD_TEMPLATES } from '@/utils/templates';
 import { saveBoardToHistory } from '@/utils/boardHistory';
+import { useAppSettingsStore } from '@/stores/appSettingsStore';
 import type { Board, Column, Card, Vote, ActionItem, Participant, BoardTemplate, BoardSettings, ConnectionStatus } from '@/types';
 
 interface BoardState {
@@ -88,7 +89,10 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       description,
       template,
       created_by: participantId,
-      settings: DEFAULT_BOARD_SETTINGS,
+      settings: {
+        ...DEFAULT_BOARD_SETTINGS,
+        ...(useAppSettingsStore?.getState?.()?.settings?.default_board_settings ?? {}),
+      },
     });
 
     if (boardError) throw boardError;

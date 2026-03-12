@@ -1,10 +1,21 @@
-import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, Radio } from 'lucide-react';
 import { useBoardStore } from '@/stores/boardStore';
 
 export function ConnectionStatusBanner() {
   const connectionStatus = useBoardStore((s) => s.connectionStatus);
 
   if (connectionStatus === 'connected') return null;
+
+  if (connectionStatus === 'polling') {
+    return (
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
+        <div className="mt-3 flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-info)]/10 px-4 py-2 text-sm font-medium text-[var(--color-info)]">
+          <Radio size={16} />
+          <span>Polling mode — updates every 10 seconds</span>
+        </div>
+      </div>
+    );
+  }
 
   if (connectionStatus === 'disconnected') {
     return (
